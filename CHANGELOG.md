@@ -4,6 +4,36 @@ Notable changes to this project. Newest entries first.
 
 ---
 
+## 2026-06-11 — v0.4.0 Phase 3 living framework
+
+### Added
+
+- `om recall` — local memory snapshots + AgentDrive `experience context-pack`
+- `om remember` — explicit situation persistence
+- `om roles` — Factory-style orchestrator/implementer/validator/research routing
+- `om watch` — live situation refresh (poll + fs.watch)
+- `om bridge status/push` — Vektra engine WebSocket situation sync
+- `om mission run` — phased mission execution with verification gates
+- `om team export` — committable `team.yaml`
+- `--verify-on-exit` on `wrap`, `run`, `handoff`
+- AgentDrive auto-record on wrap (`agentdrive experience record`)
+- Local memory at `.openmangos/memory/snapshots.jsonl`
+- Backend adapter modules with role metadata
+- `ws` dependency for Vektra bridge
+
+### Changed
+
+- Default config enables AgentDrive + Vektra bridge
+- Version 0.4.0
+
+### Verify
+
+```bash
+om remember && om recall --local && om roles && om mission run
+```
+
+---
+
 ## 2026-06-11 — v0.3.0 complete tool push
 
 ### Added

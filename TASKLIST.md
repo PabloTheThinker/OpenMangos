@@ -53,28 +53,28 @@ Legend: ✅ done · 🔄 in progress · ⬜ planned
 | 2.5 | Mission-lite plan files | ✅ | `om mission plan` → plan.md |
 | 2.6 | `om run` — sense + pack + wrap | ✅ | One-shot adaptive session |
 | 2.7 | Plugin loader (config probes) | ✅ | `config.probes.extra_signals` |
-| 2.8 | Post-wrap verify hook | ⬜ | `--verify-on-exit` flag |
-| 2.9 | Backend adapters as modules | ⬜ | `src/adapters/{grok,claude,...}.ts` |
-| 2.10 | Model routing by role (Factory-style) | ⬜ | orchestrator vs worker vs validator |
+| 2.8 | Post-wrap verify hook | ✅ | `--verify-on-exit` on wrap/run/handoff |
+| 2.9 | Backend adapters as modules | ✅ | `src/adapters/backends/index.ts` |
+| 2.10 | Model routing by role (Factory-style) | ✅ | `om roles` |
 
 **Competitive gap filled:** Factory Missions orchestration — backend-agnostic, local-first.
 
 ---
 
-## Phase 3 — Living framework ⬜
+## Phase 3 — Living framework 🔄
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 3.1 | AgentDrive MCP integration | ⬜ | Persist situation traces |
-| 3.2 | Cross-session memory recall | ⬜ | `om recall` from graph |
-| 3.3 | Team-shared profiles | ⬜ | Committed `.openmangos/` team config |
+| 3.1 | AgentDrive integration | ✅ | `agentdrive experience record` on wrap |
+| 3.2 | Cross-session memory recall | ✅ | `om recall` local + AgentDrive context-pack |
+| 3.3 | Team-shared profiles | ✅ | `om team export` → team.yaml |
 | 3.4 | TUI dashboard (optional) | ⬜ | Logs, diffs, infra map panels |
-| 3.5 | `om watch` — live situation refresh | ⬜ | File/port change triggers |
-| 3.6 | Mission orchestrator (multi-worker) | ⬜ | Full Factory Missions parity |
+| 3.5 | `om watch` — live situation refresh | ✅ | Poll + fs.watch triggers |
+| 3.6 | Mission orchestrator | 🔄 | `om mission run` with verify gates; multi-worker ⬜ |
 | 3.7 | Computer-use validation hook | ⬜ | UI smoke via playwright |
 | 3.8 | OpenTelemetry export | ⬜ | Factory enterprise parity |
 | 3.9 | Plugin marketplace spec | ⬜ | probes + modes packages |
-| 3.10 | vektra-engine terminal bridge consumer | ⬜ | WS situation sync |
+| 3.10 | vektra-engine terminal bridge | ✅ | `om bridge push` + auto on wrap |
 
 **Competitive gap filled:** Conductor persistent context + AgentDrive structural memory.
 
@@ -143,4 +143,4 @@ openmangos/
 
 ---
 
-*Updated: 2026-06-11 — v0.3.0 Phase 1 complete, Phase 2 core shipped*
+*Updated: 2026-06-11 — v0.4.0 Phase 3 core: AgentDrive, watch, roles, mission run*

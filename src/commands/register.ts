@@ -1,11 +1,19 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import type { Command } from 'commander'
-import { launchBackend, prepareWrapContext } from '../adapters/wrap.js'
+import YAML from 'yaml'
+import { BACKEND_ADAPTERS } from '../adapters/backends/index.js'
+import { launchBackend, prepareWrapContext, shouldVerifyOnExit } from '../adapters/wrap.js'
 import { isBackendId } from '../core/backends.js'
 import { loadConfig } from '../core/config.js'
 import { initWorkspace } from '../core/init.js'
-import { buildMissionPlan, missionToMarkdown, saveMissionPlan } from '../core/mission.js'
+import { buildMissionPlan, saveMissionPlan } from '../core/mission.js'
+import { runMissionPhases } from '../core/mission-runner.js'
+import { recallLocal, rememberSituation } from '../core/memory.js'
+import { resolveRoleBackends } from '../core/roles.js'
+import { startWatch } from '../core/watch.js'
+import { fetchAgentDriveContextPack, recordToAgentDrive } from '../integrations/agentdrive.js'
+import { probeVektraBridge, pushSituationToVektra } from '../integrations/vektra-bridge.js'
 import { isMode, MODES } from '../core/modes.js'
 import { situationToJson, situationToMarkdown } from '../core/pack.js'
 import { loadProfile, saveProfile } from '../core/profile.js'
@@ -194,11 +202,137 @@ export function registerCommands(program: Command): void {
     })
 
   program
+    .command('recall')
+    .description('Recall cross-session memory (local + AgentDrive)')
+    .option('-C, --directory <path>', 'workspace root', process.cwd())
+    .option('--local', 'local snapshots only')
+    .option('--agentdrive', 'AgentDrive context pack only')
+    .option('--json', 'JSON output')
+    .option('-n, --limit <n>', 'local snapshot limit', '8')
+    .action(async (opts: { directory: string; local?: boolean; agentdrive?: boolean; json?: boolean; limit: string }) => {
+      const root = resolve(opts.directory)
+      const config = await loadConfig(root)
+      const output: Record<string, unknown> = {}
+
+      if (!opts.agentdrive) {
+        output.local = await recallLocal(root, Number(opts.limit))
+      }
+      if (!opts.local) {
+        output.agentdrive = await fetchAgentDriveContextPack(config.agentdrive ?? {})
+      }
+
+      if (opts.json) {
+        console.log(JSON.stringify(output, null, 2))
+        return
+      }
+
+      if (output.local) {
+        console.log('\n## Local memory\n')
+        for (const m of output.local as Array<{ id: string; recordedAt: string; summary: string }>) {
+          console.log(`  ${m.id}  ${m.recordedAt}  ${m.summary}`)
+        }
+      }
+      const ad = output.agentdrive as { ok: boolean; text: string; source: string } | undefined
+      if (ad?.ok && ad.text) {
+        console.log('\n## AgentDrive Experience Graph\n')
+        console.log(ad.text.slice(0, 3000))
+      } else if (ad && !opts.local) {
+        console.log(`\nAgentDrive: ${ad.source}`)
+      }
+    })
+
+  program
+    .command('remember')
+    .description('Persist current situation to local memory + AgentDrive')
+    .option('-C, --directory <path>', 'workspace root', process.cwd())
+    .action(async (opts: { directory: string }) => {
+      const root = resolve(opts.directory)
+      const situation = await buildSituation(root)
+      const config = await loadConfig(root)
+      const snap = await rememberSituation(root, situation)
+      console.log(`local memory: ${snap.id}`)
+      const ad = await recordToAgentDrive(root, situation, config.agentdrive ?? {})
+      console.log(ad.ok ? `agentdrive: ${ad.message}` : `agentdrive: ${ad.message}`)
+    })
+
+  program
+    .command('roles')
+    .description('Factory-style model routing by role')
+    .option('-C, --directory <path>', 'workspace root', process.cwd())
+    .option('--json', 'JSON output')
+    .action(async (opts: { directory: string; json?: boolean }) => {
+      const root = resolve(opts.directory)
+      const situation = await buildSituation(root)
+      const config = await loadConfig(root)
+      const roles = resolveRoleBackends(situation.backends.available, config)
+      if (opts.json) {
+        console.log(JSON.stringify(roles, null, 2))
+        return
+      }
+      console.log('\nRole routing (Factory Missions pattern)\n')
+      for (const r of roles) {
+        console.log(`  ${r.role.padEnd(14)} → ${r.backend}`)
+        console.log(`    ${r.reason}`)
+      }
+      console.log('\nBackends:')
+      for (const b of BACKEND_ADAPTERS) {
+        if (situation.backends.available.includes(b.id)) {
+          console.log(`  ${b.id}: ${b.strengths.join(', ')}`)
+        }
+      }
+    })
+
+  program
+    .command('watch')
+    .description('Live situation refresh on file/runtime changes')
+    .option('-C, --directory <path>', 'workspace root', process.cwd())
+    .option('-i, --interval <sec>', 'poll interval seconds', '5')
+    .action((opts: { directory: string; interval: string }) => {
+      const root = resolve(opts.directory)
+      console.error(`Watching ${root} (every ${opts.interval}s). Ctrl+C to stop.\n`)
+      const stop = startWatch(root, {
+        intervalMs: Number(opts.interval) * 1000,
+        build: () => buildSituation(root),
+        onUpdate: (situation, changes) => {
+          console.log(`[${new Date().toISOString()}] ${changes.join(' · ')}`)
+          console.log(`  mode=${situation.mode} stack=${situation.stack.join(',') || 'none'}\n`)
+        },
+      })
+      process.on('SIGINT', () => {
+        stop()
+        process.exit(0)
+      })
+    })
+
+  const bridgeCmd = program.command('bridge').description('Vektra engine terminal bridge')
+
+  bridgeCmd
+    .command('status')
+    .option('-C, --directory <path>', 'workspace root', process.cwd())
+    .action(async (opts: { directory: string }) => {
+      const status = await probeVektraBridge(resolve(opts.directory))
+      console.log(JSON.stringify(status, null, 2))
+    })
+
+  bridgeCmd
+    .command('push')
+    .description('Push situation to vektra-engine WebSocket bridge')
+    .option('-C, --directory <path>', 'workspace root', process.cwd())
+    .action(async (opts: { directory: string }) => {
+      const root = resolve(opts.directory)
+      const situation = await buildSituation(root)
+      const status = await pushSituationToVektra(root, situation)
+      console.log(status.message ?? JSON.stringify(status))
+    })
+
+  program
     .command('run [backend]')
     .description('Sense + pack + wrap in one command')
     .option('-C, --directory <path>', 'workspace root', process.cwd())
     .option('--task <text>', 'route backend from task description')
-    .action(async (backendArg: string | undefined, opts: { directory: string; task?: string }) => {
+    .option('--verify-on-exit', 'run om verify when backend exits')
+    .option('--no-verify-on-exit', 'skip exit verification')
+    .action(async (backendArg: string | undefined, opts: { directory: string; task?: string; verifyOnExit?: boolean; noVerifyOnExit?: boolean }) => {
       const root = resolve(opts.directory)
       let situation = await buildSituation(root)
       let backend: BackendId = situation.backends.preferred
@@ -219,16 +353,20 @@ export function registerCommands(program: Command): void {
       }
 
       const { packPath, env } = await prepareWrapContext(root, situation, backend)
+      const verifyOnExit = await shouldVerifyOnExit(root, opts.noVerifyOnExit ? false : opts.verifyOnExit)
       console.error(`OpenMangos run → ${backend}`)
       console.error(`context: ${packPath}`)
-      launchBackend(backend, env, root)
+      if (verifyOnExit) console.error('verify-on-exit: enabled')
+      launchBackend(backend, env, root, [], { verifyOnExit })
     })
 
   program
     .command('wrap [backend]')
     .description('Launch AI backend with OpenMangos context')
     .option('-C, --directory <path>', 'workspace root', process.cwd())
-    .action(async (backendArg: string | undefined, opts: { directory: string }) => {
+    .option('--verify-on-exit', 'run om verify when backend exits')
+    .option('--no-verify-on-exit', 'skip exit verification')
+    .action(async (backendArg: string | undefined, opts: { directory: string; verifyOnExit?: boolean; noVerifyOnExit?: boolean }) => {
       const root = resolve(opts.directory)
       const situation = await buildSituation(root)
       const backendInput = backendArg ?? situation.backends.preferred
@@ -237,9 +375,11 @@ export function registerCommands(program: Command): void {
         process.exit(1)
       }
       const { packPath, env } = await prepareWrapContext(root, situation, backendInput)
+      const verifyOnExit = await shouldVerifyOnExit(root, opts.noVerifyOnExit ? false : opts.verifyOnExit)
       console.error(`OpenMangos wrap → ${backendInput}`)
       console.error(`context: ${packPath}`)
-      launchBackend(backendInput, env, root)
+      if (verifyOnExit) console.error('verify-on-exit: enabled')
+      launchBackend(backendInput, env, root, [], { verifyOnExit })
     })
 
   program
@@ -247,7 +387,8 @@ export function registerCommands(program: Command): void {
     .description('Hand off to another backend (logs session, re-wraps)')
     .requiredOption('--to <backend>', 'target backend')
     .option('-C, --directory <path>', 'workspace root', process.cwd())
-    .action(async (opts: { directory: string; to: string }) => {
+    .option('--verify-on-exit', 'run om verify when backend exits')
+    .action(async (opts: { directory: string; to: string; verifyOnExit?: boolean }) => {
       const root = resolve(opts.directory)
       if (!isBackendId(opts.to)) {
         console.error('Unknown backend')
@@ -256,9 +397,10 @@ export function registerCommands(program: Command): void {
       const situation = await buildSituation(root)
       await handoffSession(root, situation.backends.preferred, opts.to, situation.mode, situation.workspace)
       const { packPath, env } = await prepareWrapContext(root, situation, opts.to)
+      const verifyOnExit = await shouldVerifyOnExit(root, opts.verifyOnExit)
       console.error(`handoff → ${opts.to}`)
       console.error(`context: ${packPath}`)
-      launchBackend(opts.to, env, root)
+      launchBackend(opts.to, env, root, [], { verifyOnExit })
     })
 
   const sessionCmd = program.command('session').description('Session history')
@@ -316,5 +458,42 @@ export function registerCommands(program: Command): void {
         console.error('No mission plan. Run: om mission plan "your goal"')
         process.exit(1)
       }
+    })
+
+  missionCmd
+    .command('run')
+    .description('Run mission phases with verification gates')
+    .option('-C, --directory <path>', 'workspace root', process.cwd())
+    .option('--no-verify', 'skip verification between phases')
+    .action(async (opts: { directory: string; noVerify?: boolean }) => {
+      const root = resolve(opts.directory)
+      const results = await runMissionPhases(root, { autoVerify: !opts.noVerify })
+      console.log('\nMission run\n')
+      for (const r of results) {
+        const icon = r.verifyOk ? '✓' : '✗'
+        console.log(`${icon} Phase: ${r.phase} (verify: ${r.verifySummary})`)
+        for (const t of r.tasks) console.log(`    - ${t}`)
+      }
+      if (results.some((r) => !r.verifyOk)) process.exit(1)
+    })
+
+  const teamCmd = program.command('team').description('Team-shared OpenMangos config')
+
+  teamCmd
+    .command('export')
+    .description('Export committable team config snippet')
+    .option('-C, --directory <path>', 'workspace root', process.cwd())
+    .action(async (opts: { directory: string }) => {
+      const root = resolve(opts.directory)
+      const config = await loadConfig(root)
+      const profile = await loadProfile(root)
+      const teamYaml = {
+        team: { name: config.team?.name ?? 'default', shared_profile: true },
+        backends: config.backends,
+        constraints: config.constraints ?? profile.constraints,
+      }
+      const path = join(root, '.openmangos', 'team.yaml')
+      await writeFile(path, YAML.stringify(teamYaml), 'utf8')
+      console.log(`Wrote ${path} — commit this for team-shared routing/constraints`)
     })
 }

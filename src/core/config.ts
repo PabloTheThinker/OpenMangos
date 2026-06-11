@@ -39,6 +39,21 @@ export const DEFAULT_CONFIG: OpenMangosConfig = {
       ops: 'grok',
       quick: 'codex',
     },
+    roles: {
+      orchestrator: 'claude',
+      implementer: 'grok',
+      validator: 'codex',
+      research: 'grok',
+    },
   },
   verify_on_exit: false,
+  agentdrive: {
+    enabled: true,
+    auto_remember: true,
+    swarm_id: 'stabilization-wave-20260531',
+  },
+  vektra: {
+    enabled: true,
+    auto_push: true,
+  },
 }

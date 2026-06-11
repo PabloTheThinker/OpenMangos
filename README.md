@@ -37,6 +37,14 @@ npm run dev -- sense
 | `om session ls` | List recent sessions |
 | `om mission plan "goal"` | Generate phased mission plan |
 | `om doctor` | Check om + backends on PATH |
+| `om recall` | Local memory + AgentDrive context |
+| `om remember` | Persist situation snapshot |
+| `om roles` | Factory-style role → backend routing |
+| `om watch` | Live situation refresh |
+| `om bridge status/push` | Vektra engine WebSocket sync |
+| `om mission run` | Run plan phases with verify gates |
+| `om team export` | Committable team.yaml |
+| `om wrap --verify-on-exit` | Auto-verify after AI session |
 
 ## Probes
 

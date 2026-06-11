@@ -2,6 +2,8 @@ export type Mode = 'build' | 'debug' | 'infra' | 'review' | 'ship'
 
 export type BackendId = 'grok' | 'claude' | 'opencode' | 'codex' | 'cursor'
 
+export type MissionRole = 'orchestrator' | 'implementer' | 'validator' | 'research'
+
 export interface ProbeSignal {
   source: string
   kind: 'stack' | 'infra' | 'workflow' | 'health' | 'runtime'
@@ -53,17 +55,36 @@ export interface UserProfile {
   notes?: string
 }
 
+export interface AgentDriveConfig {
+  enabled?: boolean
+  bin?: string
+  swarm_id?: string
+  auto_remember?: boolean
+}
+
+export interface VektraBridgeConfig {
+  enabled?: boolean
+  auto_push?: boolean
+}
+
 export interface OpenMangosConfig {
   constraints?: string[]
   backends?: {
     preferred?: BackendId
     routing?: Partial<Record<string, BackendId>>
+    roles?: Partial<Record<MissionRole, BackendId>>
   }
   probes?: {
     extra_signals?: ProbeSignal[]
   }
   verify_on_exit?: boolean
   plugins?: string[]
+  agentdrive?: AgentDriveConfig
+  vektra?: VektraBridgeConfig
+  team?: {
+    name?: string
+    shared_profile?: boolean
+  }
 }
 
 export interface ToolDefinition {
@@ -107,4 +128,21 @@ export interface MissionPlan {
   stack: string[]
   phases: MissionPhase[]
   verification: string[]
+}
+
+export interface MemorySnapshot {
+  id: string
+  recordedAt: string
+  workspace: string
+  mode: Mode
+  stack: string[]
+  summary: string
+  situationPath?: string
+}
+
+export interface BridgeStatus {
+  available: boolean
+  wsUrl?: string
+  editorConnected?: boolean
+  message?: string
 }
