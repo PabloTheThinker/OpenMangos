@@ -34,6 +34,7 @@ import { printSituationReport } from '../ui/report.js'
 import type { BackendId, Mode } from '../types.js'
 import { resolveVerificationSteps } from '../verify/registry.js'
 import { printVerificationReport, runVerification } from '../verify/runner.js'
+import { registerLearnCommands } from './learn.js'
 import { registerDriveCommands } from './drive.js'
 import { registerInstallCommands } from './install.js'
 import { registerResetCommand } from './reset.js'
@@ -41,6 +42,7 @@ import { registerLifecycleCommands } from './lifecycle.js'
 
 
 export function registerCommands(program: Command): void {
+  registerLearnCommands(program)
   registerDriveCommands(program)
   registerInstallCommands(program)
   registerLifecycleCommands(program)

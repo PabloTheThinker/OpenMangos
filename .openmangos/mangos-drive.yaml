@@ -1,0 +1,8 @@
+drive_id: mangos-pablothethinker
+display_name: Mangos Drive
+owner: pablothethinker
+created_at: 2026-06-11T12:50:53.788Z
+swarms:
+  personal: mangos-pablothethinker-personal
+  workspace: mangos-pablothethinker-openmangos
+agentdrive_home: /home/pablothethinker/.agentdrive

@@ -1,5 +1,8 @@
 import { readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import { gatherLearnedSkills } from '../learning/loop.js'
+import { buildLearningNudge } from '../learning/recall.js'
+import { loadConfig } from './config.js'
 import { loadMangosDriveManifest } from '../integrations/mangos-drive.js'
 import { PROFILE_DIR } from './profile.js'
 import type { SituationGraph } from '../types.js'
@@ -13,7 +16,7 @@ function signalValue(situation: SituationGraph, label: string): string | undefin
   return situation.signals.find((s) => s.label === label)?.value
 }
 
-function suggestVerificationCommands(situation: SituationGraph): string[] {
+export function suggestVerificationCommands(situation: SituationGraph): string[] {
   const commands: string[] = []
   const scripts = signalValue(situation, 'scripts')?.split(',').map((s) => s.trim()) ?? []
   const testRunner = signalValue(situation, 'test_runner')
@@ -68,6 +71,7 @@ function suggestVerificationCommands(situation: SituationGraph): string[] {
 export function buildAgentsMdSection(
   situation: SituationGraph,
   mangosDrive?: { displayName: string; driveId: string; workspaceSwarm: string; personalSwarm: string },
+  learningNudge?: string,
 ): string {
   const stack = situation.stack.join(', ') || 'unknown'
   const infra = situation.infra.join(', ') || 'none detected'
@@ -118,6 +122,16 @@ export function buildAgentsMdSection(
     '| `OPENMANGOS_WORKSPACE` | Workspace name |',
     '',
     `Full context pack: \`${packDir}\`. Prefer stack-appropriate commands for **${situation.mode}** mode.`,
+    ...(learningNudge ?
+      [
+        '',
+        '### Mangos learning loop',
+        '',
+        learningNudge,
+        '',
+        'Skills live under `.openmangos/learning/skills/` on this Mangos Drive workspace (agentskills.io-compatible SKILL.md).',
+      ]
+    : []),
   ]
 
   return lines.join('\n')
@@ -144,6 +158,12 @@ export async function syncAgentsMd(
 ): Promise<{ path: string; created: boolean; updated: boolean }> {
   const path = join(root, AGENTS_MD_FILE)
   const manifest = await loadMangosDriveManifest(root)
+  const config = await loadConfig(root)
+  let learningNudge: string | undefined
+  if (config.learning?.enabled !== false && config.learning?.nudge_agents !== false) {
+    const recalled = await gatherLearnedSkills(root, situation, situation.backends.preferred)
+    learningNudge = buildLearningNudge(recalled)
+  }
   const section = buildAgentsMdSection(
     situation,
     manifest ?
@@ -154,6 +174,7 @@ export async function syncAgentsMd(
         personalSwarm: manifest.swarms.personal,
       }
     : undefined,
+    learningNudge,
   )
   const wrapped = wrapSection(section)
 

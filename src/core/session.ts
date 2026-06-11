@@ -65,6 +65,26 @@ export async function startSession(
   return recordSession(root, { backend, mode, workspace, root, event: 'start', note })
 }
 
+export async function endSession(
+  root: string,
+  sessionId: string,
+  backend: BackendId,
+  mode: Mode,
+  workspace: string,
+  note?: string,
+): Promise<SessionEntry> {
+  return recordSession(root, {
+    id: sessionId,
+    backend,
+    mode,
+    workspace,
+    root,
+    event: 'end',
+    endedAt: new Date().toISOString(),
+    note,
+  })
+}
+
 export async function handoffSession(
   root: string,
   fromBackend: BackendId,

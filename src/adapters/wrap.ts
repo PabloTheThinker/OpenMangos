@@ -6,15 +6,18 @@ import { loadConfig } from '../core/config.js'
 import { writeContextPackFiles } from '../core/context-pack.js'
 import { rememberSituation } from '../core/memory.js'
 import { PROFILE_DIR, saveSituationProfile } from '../core/profile.js'
-import { startSession } from '../core/session.js'
+import { endSession, startSession } from '../core/session.js'
 import { resolveAgentDriveSwarms } from '../integrations/agentdrive-swarm.js'
 import { recordToAgentDrive } from '../integrations/agentdrive.js'
 import { pushSituationToVektra } from '../integrations/vektra-bridge.js'
 import { buildSituation } from '../core/situation.js'
+import { gatherLearnedSkills, runLearningLoopOnExit } from '../learning/loop.js'
+import { recalledSkillsToJson } from '../learning/recall.js'
 import type { BackendId, SituationGraph } from '../types.js'
 import { resolveLaunchPlan } from './launch.js'
 import { resolveVerificationSteps } from '../verify/registry.js'
 import { printVerificationReport, runVerification } from '../verify/runner.js'
+import type { VerificationResult } from '../verify/types.js'
 
 export interface WrapOptions {
   verifyOnExit?: boolean
@@ -51,6 +54,9 @@ export async function prepareWrapContext(
   if (packMemory.local?.length) {
     console.error(`OpenMangos → local recall: ${packMemory.local.length} snapshot(s) in context pack`)
   }
+  if (packMemory.skills?.length) {
+    console.error(`OpenMangos → recalled ${packMemory.skills.length} Mangos skill(s)`)
+  }
 
   const profilePath = await saveSituationProfile(root, situation)
 
@@ -80,6 +86,9 @@ export async function prepareWrapContext(
     if (bridge.available) console.error(`OpenMangos → Vektra: ${bridge.message}`)
   }
 
+  const recalledSkills = await gatherLearnedSkills(root, situation, backend)
+  const skillsJsonPath = join(root, PROFILE_DIR, 'learning', 'recalled-skills.json')
+
   const env: NodeJS.ProcessEnv = {
     ...process.env,
     OPENMANGOS_ROOT: root,
@@ -91,22 +100,84 @@ export async function prepareWrapContext(
     OPENMANGOS_SESSION: session.id,
     OPENMANGOS_BACKEND: backend,
     OPENMANGOS_MEMORY: memory.id,
+    OPENMANGOS_LEARNING: config.learning?.enabled === false ? '0' : '1',
+    ...(recalledSkills.length ?
+      { OPENMANGOS_SKILLS: recalledSkillsToJson(recalledSkills) }
+    : {}),
+  }
+
+  if (recalledSkills.length) {
+    const { mkdir, writeFile } = await import('node:fs/promises')
+    await mkdir(join(root, PROFILE_DIR, 'learning'), { recursive: true })
+    await writeFile(skillsJsonPath, recalledSkillsToJson(recalledSkills), 'utf8')
+    env.OPENMANGOS_SKILLS_PATH = skillsJsonPath
   }
 
   return { packPath: packMdPath, profilePath, env }
 }
 
-async function runExitVerification(root: string): Promise<void> {
+async function runExitVerification(root: string): Promise<VerificationResult> {
   console.error('\nOpenMangos → running post-session verification…')
   const situation = await buildSituation(root)
   const steps = await resolveVerificationSteps(situation, root)
   if (!steps.length) {
     console.error('  (no verification steps)')
-    return
+    return {
+      root,
+      steps: [],
+      passed: 0,
+      failed: 0,
+      skipped: 0,
+      ok: true,
+      durationMs: 0,
+    }
   }
   const result = await runVerification(root, steps)
   printVerificationReport(result)
-  if (!result.ok) process.exit(1)
+  return result
+}
+
+interface LaunchContext {
+  root: string
+  backend: BackendId
+  situation: SituationGraph
+  sessionId?: string
+  verifyOnExit: boolean
+}
+
+async function handleSessionExit(ctx: LaunchContext, exitCode: number, signal?: string | null): Promise<number> {
+  let verification: VerificationResult | undefined
+  if (ctx.verifyOnExit) {
+    verification = await runExitVerification(ctx.root)
+    if (!verification.ok) exitCode = exitCode || 1
+  }
+
+  if (ctx.sessionId) {
+    await endSession(
+      ctx.root,
+      ctx.sessionId,
+      ctx.backend,
+      ctx.situation.mode,
+      ctx.situation.workspace,
+      signal ? `signal ${signal}` : `exit ${exitCode}`,
+    )
+  }
+
+  const config = await loadConfig(ctx.root)
+  if (config.learning?.enabled !== false) {
+    const learning = await runLearningLoopOnExit({
+      root: ctx.root,
+      sessionId: ctx.sessionId,
+      backend: ctx.backend,
+      situation: ctx.situation,
+      exitCode,
+      signal,
+      verification,
+    })
+    console.error(`OpenMangos → learning: ${learning.message}`)
+  }
+
+  return exitCode
 }
 
 export function launchBackend(
@@ -114,10 +185,37 @@ export function launchBackend(
   env: NodeJS.ProcessEnv,
   cwd: string,
   extraArgs: string[] = [],
-  options: WrapOptions = {},
+  options: WrapOptions & {
+    situation?: SituationGraph
+    verifyOnExit?: boolean
+  } = {},
 ): void {
   const spec = getBackendSpec(backendId)
   if (!spec) throw new Error(`Unknown backend: ${backendId}`)
+
+  const launchCtx: LaunchContext = {
+    root: cwd,
+    backend: backendId,
+    situation: options.situation ?? {
+      workspace: env.OPENMANGOS_WORKSPACE ?? 'unknown',
+      root: cwd,
+      generatedAt: new Date().toISOString(),
+      stack: [],
+      infra: [],
+      workflow: {},
+      health: {},
+      runtime: {},
+      signals: [],
+      mode: (env.OPENMANGOS_MODE as SituationGraph['mode']) ?? 'build',
+      modeReasons: [],
+      suggestedMode: 'build',
+      suggestedModeReasons: [],
+      constraints: [],
+      backends: { preferred: backendId, available: [backendId] },
+    },
+    sessionId: env.OPENMANGOS_SESSION,
+    verifyOnExit: options.verifyOnExit === true,
+  }
 
   const child = spawn(spec.command, [...spec.args, ...extraArgs], {
     cwd,
@@ -133,12 +231,9 @@ export function launchBackend(
   })
 
   child.on('exit', (code, signal) => {
-    if (signal) process.exit(1)
-    if (options.verifyOnExit) {
-      void runExitVerification(cwd).then(() => process.exit(code ?? 0))
-      return
-    }
-    process.exit(code ?? 0)
+    void handleSessionExit(launchCtx, signal ? 1 : (code ?? 0), signal).then((finalCode) => {
+      process.exit(finalCode)
+    })
   })
 }
 
@@ -162,5 +257,8 @@ export async function wrapAndLaunch(
   const verifyOnExit = await shouldVerifyOnExit(root, options.verifyFlag)
   if (verifyOnExit) console.error('verify-on-exit: enabled')
 
-  launchBackend(backend, env, root, [...plan.args, ...(options.extraArgs ?? [])], { verifyOnExit })
+  launchBackend(backend, env, root, [...plan.args, ...(options.extraArgs ?? [])], {
+    verifyOnExit,
+    situation,
+  })
 }

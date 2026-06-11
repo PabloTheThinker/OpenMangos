@@ -1,0 +1,4 @@
+mode: debug
+constraints: []
+backends:
+  preferred: opencode

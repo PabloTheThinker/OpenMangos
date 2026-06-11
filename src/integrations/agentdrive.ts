@@ -74,6 +74,7 @@ export async function recordToAgentDrive(
   situation: SituationGraph,
   config: AgentDriveConfig = {},
   swarmId?: string,
+  options?: { summary?: string; reasoningFile?: string },
 ): Promise<{ ok: boolean; message: string }> {
   if (config.enabled === false) {
     return { ok: false, message: 'AgentDrive disabled in config' }
@@ -84,12 +85,14 @@ export async function recordToAgentDrive(
     return { ok: false, message: 'agentdrive not found on PATH' }
   }
 
-  const summary = `OpenMangos ${situation.workspace}: mode=${situation.mode} stack=${situation.stack.join(',')} @ ${situation.root}`
+  const summary =
+    options?.summary ??
+    `OpenMangos ${situation.workspace}: mode=${situation.mode} stack=${situation.stack.join(',')} @ ${situation.root}`
   const args = ['experience', 'record', '--summary', summary, '--json']
   const targetSwarm = swarmId ?? config.swarm_id
   if (targetSwarm) args.push('--swarm-id', targetSwarm)
 
-  const reasoningFile = join(root, '.openmangos', 'context-pack.json')
+  const reasoningFile = options?.reasoningFile ?? join(root, '.openmangos', 'context-pack.json')
   try {
     await access(reasoningFile)
     args.push('--reasoning-file', reasoningFile)

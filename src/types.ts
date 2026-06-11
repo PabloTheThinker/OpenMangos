@@ -94,11 +94,68 @@ export interface AgentDriveContextSummary {
   source: string
 }
 
+export interface MangoSkillOpenMangosMeta {
+  tags: string[]
+  category: string
+  mode: Mode
+  backend: BackendId
+  stack: string[]
+  success_count: number
+  created_at: string
+  updated_at: string
+}
+
+export interface MangoSkillMeta {
+  name: string
+  description: string
+  version: string
+  openmangos: MangoSkillOpenMangosMeta
+}
+
+export interface RecalledSkillSummary {
+  slug: string
+  score: number
+  description: string
+  mode: Mode
+  backend: BackendId
+  stack: string[]
+  success_count: number
+  excerpt?: string
+}
+
+export interface LearningEvent {
+  id: string
+  recordedAt: string
+  sessionId?: string
+  backend: BackendId
+  mode: Mode
+  stack: string[]
+  workspace: string
+  exitCode: number
+  signal?: string
+  verificationOk?: boolean
+  outcome: 'success' | 'failure' | 'nudge'
+  skillSlug?: string
+  note?: string
+}
+
+export interface LearningConfig {
+  enabled?: boolean
+  /** Extract/update skills after successful sessions (default: true). */
+  auto_learn?: boolean
+  /** Inject recalled skills into context pack (default: true). */
+  auto_recall?: boolean
+  /** Hermes-style nudge in AGENTS.md (default: true). */
+  nudge_agents?: boolean
+  min_success_exit_code?: number
+}
+
 export interface ContextPackMemory {
   mangos_drive?: MangosDriveManifest
   agentdrive?: AgentDriveContextSummary
   agentdrive_personal?: AgentDriveContextSummary
   local?: MemorySnapshot[]
+  skills?: RecalledSkillSummary[]
 }
 
 export interface VektraBridgeConfig {
@@ -120,6 +177,7 @@ export interface OpenMangosConfig {
   }
   verify_on_exit?: boolean
   plugins?: string[]
+  learning?: LearningConfig
   agentdrive?: AgentDriveConfig
   vektra?: VektraBridgeConfig
   team?: {

@@ -4,6 +4,33 @@ Notable changes to this project. Newest entries first.
 
 ---
 
+## 2026-06-11 — Mangos learning loop (Hermes-style self-learning)
+
+### Added
+
+- **`src/learning/`** — closed learning loop on Mangos Drive: observe session exit → extract SKILL.md → recall into context pack
+- **Skills** — `.openmangos/learning/skills/<slug>/SKILL.md` (agentskills.io-compatible frontmatter)
+- **CLI** — `om learn status|nudge|events`, `om skills list|show|recall`
+- **Wrap exit hook** — successful sessions auto-create/update skills; failures log events only
+- **Context pack + AGENTS.md** — recalled skills + Hermes-style nudge injected before launch
+- **Env** — `OPENMANGOS_LEARNING`, `OPENMANGOS_SKILLS`, `OPENMANGOS_SKILLS_PATH`
+- **AgentDrive** — skill writes also `experience record` with SKILL.md as reasoning file
+
+### Changed
+
+- **v0.11.0** — `learning` config block (`enabled`, `auto_learn`, `auto_recall`, `nudge_agents`)
+
+### Verify
+
+```bash
+npm test
+om learn status
+om wrap opencode   # exit 0 → skill created
+om skills list
+```
+
+---
+
 ## 2026-06-11 — OpenMango positioning (open bet vs closed agent tiers)
 
 ### Changed

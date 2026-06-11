@@ -6,6 +6,8 @@ import {
   agentDriveContextToMarkdown,
 } from '../integrations/agentdrive-format.js'
 import { loadMangosDriveManifest } from '../integrations/mangos-drive.js'
+import { gatherLearnedSkills } from '../learning/loop.js'
+import { skillsToMarkdown } from '../learning/recall.js'
 import { recallLocal } from './memory.js'
 import { situationToJson, situationToMarkdown } from './pack.js'
 
@@ -73,6 +75,20 @@ export async function gatherContextPackMemory(
     memory.agentdrive_personal = await fetchSwarmContext(adConfig, swarms.personalSwarmId)
   }
 
+  const recalled = await gatherLearnedSkills(root, situation, situation.backends.preferred)
+  if (recalled.length) {
+    memory.skills = recalled.map((s) => ({
+      slug: s.slug,
+      score: s.score,
+      description: s.meta.description,
+      mode: s.meta.openmangos.mode,
+      backend: s.meta.openmangos.backend,
+      stack: s.meta.openmangos.stack,
+      success_count: s.meta.openmangos.success_count,
+      excerpt: s.excerpt,
+    }))
+  }
+
   return memory
 }
 
@@ -96,6 +112,32 @@ export function buildContextPackMarkdown(
       ).join('\n'),
     )
   }
+  if (memory?.skills?.length) {
+    sections.push(
+      skillsToMarkdown(
+        memory.skills.map((s) => ({
+          slug: s.slug,
+          score: s.score,
+          meta: {
+            name: s.slug,
+            description: s.description,
+            version: '1.0.0',
+            openmangos: {
+              tags: [],
+              category: 'operator',
+              mode: s.mode,
+              backend: s.backend,
+              stack: s.stack,
+              success_count: s.success_count,
+              created_at: '',
+              updated_at: '',
+            },
+          },
+          excerpt: s.excerpt ?? s.description,
+        })),
+      ).join('\n'),
+    )
+  }
   return sections.join('\n')
 }
 
@@ -108,7 +150,8 @@ export function buildContextPackJson(
     (memory.local?.length ||
       memory.agentdrive ||
       memory.agentdrive_personal ||
-      memory.mangos_drive)
+      memory.mangos_drive ||
+      memory.skills?.length)
   if (!hasMemory) return situationToJson(situation)
   return JSON.stringify({ situation, memory }, null, 2)
 }

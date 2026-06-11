@@ -48,6 +48,13 @@ export const DEFAULT_CONFIG: OpenMangosConfig = {
     },
   },
   verify_on_exit: false,
+  learning: {
+    enabled: true,
+    auto_learn: true,
+    auto_recall: true,
+    nudge_agents: true,
+    min_success_exit_code: 0,
+  },
   agentdrive: {
     enabled: true,
     auto_remember: true,
