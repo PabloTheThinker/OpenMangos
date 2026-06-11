@@ -4,6 +4,14 @@ Notable changes to this project. Newest entries first.
 
 ---
 
+## 2026-06-11 — Mascot prompt doc
+
+### Added
+
+- **`assets/MASCOT.md`** — image generation prompts for hero portrait, square mascot, and app icon mark
+
+---
+
 ## 2026-06-11 — Larger mascot + Vektra ILO-style hero
 
 ### Changed
