@@ -4,72 +4,45 @@ Notable changes to this project. Newest entries first.
 
 ---
 
-## 2026-06-11 — Mascot v2 (hard hat + name badge)
+## 2026-06-11 — Session summary: v0.10.x ship + brand launch
 
-### Changed
+End-to-end pass: **product lifecycle**, **distribution**, **Vektra presence**, **GitHub brand**, **mascot character**.
 
-- **`assets/openmangos-mascot.png`** — replaced with user asset `Open Mangos Mascotv2.png` (hard hat, tool belt, name badge)
-- **`openmangos-logo-text.svg`** / **dark** — regenerated from v2
-- **`assets/MASCOT.md`** — v2 source path and update workflow
-- **Vektra** `public/openmangos-portrait.png` + `openmangos-mark.png`
+### Accomplished
 
-### Added
+| Area | What shipped |
+|---|---|
+| **Lifecycle** | `om install` · `om onboard` · `om update` · `om uninstall` · `om reset` · Mangos Drive provision |
+| **Distribution** | `curl -fsSL https://vektraindustries.com/openmangos/install \| bash` → `~/.openmangos/src` |
+| **Memory** | User-scoped Mangos Drive (`mangos-<user>-<workspace>` + personal swarm) on AgentDrive |
+| **Vektra site** | `/openmangos` product page, install script routes, mango theme, ILO-style character hero |
+| **GitHub** | Apple-style README, single OpenClaw-style logo (`<picture>` light/dark) |
+| **Mascot** | v1 generated → ILO hero layout → **v2 user asset** (hard hat, tool belt, name badge) |
+| **Docs** | `assets/MASCOT.md` — source path, colors, variation workflow |
 
-- **`assets/openmangos-mascot-logo.png`** — small embed for README SVG
+### Brand assets (current)
 
----
-
-## 2026-06-11 — Mascot prompt doc
-
-### Added
-
-- **`assets/MASCOT.md`** — image generation prompts for hero portrait, square mascot, and app icon mark
-
----
-
-## 2026-06-11 — Larger mascot + Vektra ILO-style hero
-
-### Changed
-
-- **README logo** — mascot scaled up in `openmangos-logo-text.svg` (560px wide)
-- **Vektra `/openmangos`** — ILO-style hero: large portrait mascot, “Hello. I’m OpenMangos.” intro
-
-### Added
-
-- **`public/openmangos-portrait.png`** on vektra-industries — full-body mascot portrait
-
----
-
-## 2026-06-11 — OpenMangos mascot logo (single README hero)
-
-### Added
-
-- **`assets/openmangos-mascot.png`** — mango character mascot (terminal badge, waving pose)
-- **`assets/openmangos-logo-text.svg`** / **`openmangos-logo-text-dark.svg`** — single mascot + wordmark logo (OpenClaw-style)
-
-### Changed
-
-- **README.md** — one centered logo via `<picture>` (light/dark), removed duplicate mark + wordmark stack
-
-### Removed
-
-- Separate app-icon mark and split logo SVGs
+- `assets/openmangos-mascot.png` — canonical mascot (transparent, 863×1152)
+- `assets/openmangos-mascot-logo.png` — README SVG embed
+- `assets/openmangos-logo-text.svg` / `openmangos-logo-text-dark.svg` — GitHub hero logo
+- Vektra: `public/openmangos-portrait.png` · `openmangos-mark.png`
 
 ### Verify
 
-- `https://github.com/PabloTheThinker/OpenMangos` — one hero logo in README header
+```bash
+npm test                                    # 40 tests
+curl -fsSL https://vektraindustries.com/openmangos/install | bash
+om drive status && om doctor
+```
 
----
+- GitHub README: https://github.com/PabloTheThinker/OpenMangos
+- Product page: https://vektraindustries.com/openmangos
 
-## 2026-06-11 — README rewrite (Apple-style)
+### Not done this session (see TASKLIST.md)
 
-### Changed
-
-- **README.md** — Apple-style product narrative: benefit-first hero, Sense/Adapt/Launch rhythm, Mangos Drive story, trimmed command reference, architecture as “how it fits together”
-
-### Verify
-
-- Preview on GitHub after push: `https://github.com/PabloTheThinker/OpenMangos`
+- `npm publish` global install without git clone
+- First-class AgentDrive drive registry (manifest + swarm dirs today)
+- Docs site, shell completions, probe integration tests
 
 ---
 

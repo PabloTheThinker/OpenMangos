@@ -17,6 +17,8 @@
   <a href="./CONCEPT.md">Concept</a>
   ·
   <a href="./CHANGELOG.md">Changelog</a>
+  ·
+  <a href="./assets/MASCOT.md">Mascot</a>
 </p>
 
 ---
