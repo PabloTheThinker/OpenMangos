@@ -1,7 +1,7 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: light)" srcset="assets/openmangos-logo-text-dark.svg" />
-    <img src="assets/openmangos-logo-text.svg" alt="OpenMangos" width="500" />
+    <img src="assets/openmangos-logo-text.svg" alt="OpenMangos" width="560" />
   </picture>
 </p>
 

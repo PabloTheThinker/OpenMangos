@@ -4,6 +4,19 @@ Notable changes to this project. Newest entries first.
 
 ---
 
+## 2026-06-11 — Larger mascot + Vektra ILO-style hero
+
+### Changed
+
+- **README logo** — mascot scaled up in `openmangos-logo-text.svg` (560px wide)
+- **Vektra `/openmangos`** — ILO-style hero: large portrait mascot, “Hello. I’m OpenMangos.” intro
+
+### Added
+
+- **`public/openmangos-portrait.png`** on vektra-industries — full-body mascot portrait
+
+---
+
 ## 2026-06-11 — OpenMangos mascot logo (single README hero)
 
 ### Added
