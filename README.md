@@ -1,193 +1,158 @@
-# OpenMangos
+<p align="center">
+  <strong>OpenMangos</strong><br />
+  <sub>The terminal adapts to the problem.<br />The model adapts to the terminal.</sub>
+</p>
 
-Adaptive terminal framework for Vektra Industries. Senses your workspace, builds a situation graph, adapts mode and context, and wraps any AI coding CLI.
+<p align="center">
+  <a href="https://vektraindustries.com/openmangos">Website</a>
+  ·
+  <a href="https://vektraindustries.com/openmangos/install">Install</a>
+  ·
+  <a href="./CONCEPT.md">Concept</a>
+  ·
+  <a href="./CHANGELOG.md">Changelog</a>
+</p>
 
-See [CONCEPT.md](./CONCEPT.md) for the full vision and competitive research.
+---
+
+You already have the agents. OpenMangos makes the terminal worthy of them.
+
+Run `om`. It reads your codebase — the stack, the infra, what is actually running — and shapes itself around the work in front of you. The right mode. The right context. The right backend. One command. No new editor. No model lock-in.
+
+OpenCode. Grok. Claude. Codex. Cursor. Orchestrated — with memory that compounds, healing when things drift, and verification when the session ends.
+
+Built by [Vektra Industries](https://vektraindustries.com). Open source. Apache-2.0.
 
 ## Install
 
-### One-liner (recommended)
+One line. Node 20+ and git.
 
 ```bash
 curl -fsSL https://vektraindustries.com/openmangos/install | bash
 ```
 
-Clones to `~/.openmangos/src`, builds, links `om`, and runs onboarding.
+Clones to `~/.openmangos/src`. Builds `om`. Links globally. Walks you through onboarding.
 
-### Local dev install
-
-```bash
-cd "/path/to/OpenMangos"
-./install.sh
-# or
-./scripts/install.sh
-```
-
-### Manual install
+Then:
 
 ```bash
-npm install && npm run build && npm link
-om install --check          # prerequisite scan
-om onboard                  # interactive 6-step wizard
+om              # sense → recall → pack → launch
+om onboard      # rerun setup
+om update       # pull latest
 ```
 
-### First `om` launch
+## Sense. Adapt. Launch.
 
-On first run, `om` offers the onboarding wizard. Skip with Enter, or disable prompts:
+Most AI terminals treat every project the same. OpenMangos does not.
+
+**Sense** probes what matters — git, languages, frameworks, containers, cloud hooks, live processes. It builds a situation graph: mode, stack, infra, health.
+
+**Adapt** shifts between build, debug, infra, review, and ship. The right tools. The right guardrails. The right verification — for *this* workspace.
+
+**Launch** wraps your agent with a full context pack, syncs `AGENTS.md`, recalls memory, and opens the backend you chose.
+
+```
+you → om → sense · adapt · pack → agent
+```
+
+The terminal stops being a pipe. It becomes the operator.
+
+## Mangos Drive
+
+Memory should feel personal — not scattered across swarm IDs you never asked for.
+
+OpenMangos provisions **your** drive on [AgentDrive](https://vektraindustries.com/agentdrive): a named namespace with a workspace swarm for the project and a personal swarm that follows you across repos.
+
+Recall on boot. Remember on exit. Structured memory that grows with your work — without asking you to manage the substrate.
 
 ```bash
-OPENMANGOS_SKIP_ONBOARD=1 om
+om drive status
+om recall
+om remember
 ```
 
-Non-interactive / CI:
+AgentDrive is the memory layer. OpenMangos is how you operate it.
 
-```bash
-om onboard --yes --install --with-opencode
-```
+## Built for real work
 
-### Dev without linking
+**Real environments** — Docker, Kubernetes, Terraform, monorepos, brownfield code. Not just a lone `package.json`.
 
-```bash
-npm run dev -- sense
-npm run dev -- onboard --yes
-```
+**Real workflows** — Route tasks to the best backend. Hand off between agents. Verify when work is done, not when the model stops talking.
 
-## Architecture (phased)
-
-**Phase 1 (now):** OpenMangos is the **adaptive orchestration layer** — it does not replace OpenCode or Warp.
-
-| Layer | Tool | Role |
-|--------|------|------|
-| Substrate | **OpenMangos (`om`)** | Sense, mode, route, context pack, verify, memory |
-| Agent (OSS) | **OpenCode** | Default agent runtime (MIT) |
-| Terminal ADE | **Warp** (optional) | Host tabs for Claude/Codex/OpenCode |
-
-**Phase 2 (later):** Full Grok Build-style terminal experience built on top once orchestration is proven.
-
-## Terminal experience
-
-Running **`om`** probes the workspace, shows a **backend picker** if you have multiple agents installed, then launches with full context.
-
-```bash
-om              # picker (opencode, grok, claude, …)
-om opencode     # direct launch
-om grok -y      # skip picker
-om backends --set opencode   # remember choice
-```
-
-Preview orchestrator TUI: **`om tui`** (not the final Grok-style shell).
-
-| Key / input | Action |
-|---|---|
-| `Tab` | Cycle mode (build → debug → infra → review → ship) |
-| `Shift+Tab` | Cycle backend |
-| `Ctrl+G` | Run routed session (`sense` + `pack` + `wrap`) |
-| `Ctrl+O` | Sessions overlay |
-| `Ctrl+T` | Mission plan overlay |
-| `!` | Bash mode (run shell command) |
-| `?` or `/help` | Shortcuts panel |
-| Plain text | Route task → suggests backend + mode |
-| `/sense`, `/wrap`, … | Full slash palette |
-
-Use `om sense`, `om run grok`, etc. for non-interactive CLI mode.
+**Real operators** — Doctor and heal fix what breaks. Reset and uninstall let you start clean — with or without your data. You commit. Always.
 
 ## Commands
 
-| Command | Description |
+| | |
 |---|---|
-| `om` / `om boot` | Adaptive bootstrap → agent launch |
-| `om tui` | Preview orchestrator TUI |
-| `om update` | Rebuild + relink (or `npm install -g` when global) |
-| `om update --check` | Show current vs published version |
-| `om uninstall` | Remove `om` from PATH (prompts to keep or purge data) |
-| `om uninstall --purge` | Uninstall + remove all local data |
-| `om uninstall --keep-data` | Uninstall CLI only |
-| `om reset` | Clear local OM data + Mangos Drive swarms (fresh start) |
-| `om install` | Build, link, and check prerequisites |
-| `om onboard` | First-run setup wizard (workspace + Mangos Drive + backend) |
-| `om init` | Scaffold `.openmangos/` (profile, config, Mangos Drive) |
-| `om drive status` | Show your Mangos Drive manifest + swarms |
-| `om drive provision` | Create/repair Mangos Drive + swarm dirs |
-| `om sense` | Probe workspace and print situation report |
-| `om suggest` | Show suggested mode + reasoning |
-| `om mode [name]` | Show or set mode |
-| `om tools` | Adaptive tool palette for current mode/stack |
-| `om pack [--write]` | Export context pack |
-| `om verify [--dry-run]` | Stack-appropriate verification |
-| `om route "task"` | Suggest backend + mode for a task |
-| `om run [backend]` | Sense + pack + wrap (one shot) |
-| `om wrap [backend]` | Launch backend with full context |
-| `om handoff --to claude` | Switch backend, keep session log |
-| `om session ls` | List recent sessions |
-| `om mission plan "goal"` | Generate phased mission plan |
-| `om doctor` | Check om + backends on PATH |
-| `om recall` | Local memory + Mangos Drive (workspace + personal swarms) |
-| `om remember` | Persist situation to local memory + Mangos Drive workspace swarm |
-| `om roles` | Factory-style role → backend routing |
-| `om watch` | Live situation refresh |
-| `om bridge status/push` | Vektra engine WebSocket sync |
-| `om mission run` | Run plan phases with verify gates |
-| `om team export` | Committable team.yaml |
-| `om wrap --verify-on-exit` | Auto-verify after AI session |
+| `om` | Bootstrap — sense, heal, pack, launch |
+| `om sense` | What OpenMangos knows about this workspace |
+| `om pack --write` | Export the context pack agents read |
+| `om doctor` | Health — backends, OpenCode, Mangos Drive |
+| `om tui` | Orchestrator shell preview |
 
-## Probes
+<details>
+<summary><strong>All commands</strong></summary>
 
-- **Git** — branch, dirty files, last commit
-- **Node** — package.json, TypeScript, frameworks, test runner
-- **Python** — pyproject/requirements, pytest, venv
-- **Rust** — Cargo.toml, edition, binaries
-- **Docker** — compose, Dockerfile, running containers
-- **Kubernetes** — manifests, Helm charts
-- **Terraform** — `.tf` files, CLI availability
-- **Vercel** — vercel.json, linked project
-- **Fly.io** — fly.toml, app + region
-- **Ports** — common dev ports via `ss`
+<br />
 
-## Mangos Drive (user-scoped memory)
+**Setup & lifecycle** — `om install` · `om onboard` · `om init` · `om update` · `om reset` · `om uninstall`
 
-When you use OpenMangos (not raw `agentdrive`), OM provisions a **named drive** for you:
+**Drive & memory** — `om drive status` · `om drive provision` · `om recall` · `om remember`
 
-| Layer | Example | Role |
-|---|---|---|
-| **Drive** | `mangos-pablothethinker` · **Mangos Drive** | Your namespace |
-| **Workspace swarm** | `mangos-pablothethinker-<project>` | Project memory |
-| **Personal swarm** | `mangos-pablothethinker-personal` | Cross-project memory |
+**Launch & routing** — `om boot` · `om run` · `om wrap` · `om route "task"` · `om handoff --to claude` · `om backends --set opencode`
 
-Manifest: `.openmangos/mangos-drive.yaml` · substrate: `~/.agentdrive/swarms/`
+**Modes & missions** — `om mode` · `om mission plan "goal"` · `om mission run` · `om roles` · `om tools`
+
+**Quality** — `om verify` · `om heal` · `om watch` · `om session ls`
+
+</details>
+
+## Requirements
+
+Node.js 20+. git. At least one agent CLI on your PATH — OpenCode recommended.
+
+Optional: [AgentDrive](https://github.com/PabloTheThinker/AgentDrive) for Mangos Drive memory.
+
+## Develop
 
 ```bash
-om drive status          # manifest + swarm ids
-om drive provision       # create or repair
-om doctor                # includes Mangos Drive health
-om heal                  # auto-provisions if missing
+git clone https://github.com/PabloTheThinker/OpenMangos.git
+cd OpenMangos
+npm install && npm run build && npm link
+om onboard
 ```
 
-**OpenMangos path:** `om` → Mangos Drive → workspace + personal swarms → AgentDrive Experience Graph.
+```bash
+npm test
+npm run dev -- sense
+```
 
-**AgentDrive direct:** `agentdrive experience … --swarm-id <id>` — same substrate, no Mangos namespace. Set `agentdrive.swarm_id` in config to use a legacy swarm.
+## How it fits together
 
-Config (`.openmangos/config.yaml`):
+OpenMangos is the orchestration layer. Your agents are the runtime.
 
-| Key | Default |
+| | |
 |---|---|
-| `agentdrive.auto_provision` | `true` |
-| `agentdrive.mangos_display_name` | `Mangos Drive` |
-| `agentdrive.recall_personal` | `true` |
+| **OpenMangos (`om`)** | Sense, mode, context, memory, launch |
+| **Your agent** | OpenCode, Grok, Claude, Codex, Cursor |
+| **AgentDrive** | Memory substrate under Mangos Drive |
+| **Warp** *(optional)* | Terminal host |
 
-## AGENTS.md hook
+Phase 1: proven orchestration. Phase 2: a native terminal experience — built on top, not instead of.
 
-`om wrap` syncs a managed `<!-- OPENMANGOS:START -->` … `<!-- OPENMANGOS:END -->` section into `AGENTS.md` with mode, stack, verification commands, and env var reference. Content outside the markers is preserved.
+The full vision lives in [CONCEPT.md](./CONCEPT.md).
 
-## Environment variables (`om wrap`)
+## Configuration
 
-| Variable | Purpose |
-|---|---|
-| `OPENMANGOS_ROOT` | Workspace root |
-| `OPENMANGOS_MODE` | Active mode (`build`, `debug`, `infra`, `review`, `ship`) |
-| `OPENMANGOS_CONTEXT` | Path to JSON situation pack |
-| `OPENMANGOS_CONTEXT_MD` | Path to Markdown context pack |
-| `OPENMANGOS_PROFILE` | Path to `.openmangos/profile.yaml` |
+Project state lives in `.openmangos/` — profile, config, context packs, Mangos Drive manifest.
+
+`om wrap` injects environment variables (`OPENMANGOS_ROOT`, `OPENMANGOS_MODE`, `OPENMANGOS_CONTEXT`, …) and maintains a managed section in `AGENTS.md`. Everything outside those markers is yours.
 
 ## License
 
-Apache-2.0
+Apache-2.0 · [Vektra Industries](https://vektraindustries.com)
+
+<p align="center">
+  <sub>🥭</sub>
+</p>

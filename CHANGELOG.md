@@ -4,6 +4,18 @@ Notable changes to this project. Newest entries first.
 
 ---
 
+## 2026-06-11 — README rewrite (Apple-style)
+
+### Changed
+
+- **README.md** — Apple-style product narrative: benefit-first hero, Sense/Adapt/Launch rhythm, Mangos Drive story, trimmed command reference, architecture as “how it fits together”
+
+### Verify
+
+- Preview on GitHub after push: `https://github.com/PabloTheThinker/OpenMangos`
+
+---
+
 ## 2026-06-11 — v0.10.3 curl installer + Vektra product page
 
 ### Added
