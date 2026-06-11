@@ -4,6 +4,14 @@ Notable changes to this project. Newest entries first.
 
 ---
 
+## 2026-06-11 — OpenMango positioning (open bet vs closed agent tiers)
+
+### Changed
+
+- **README.md** · **CONCEPT.md** — OpenMango alias, open-source operator-layer positioning (public terminal + memory vs walled premium agent surfaces)
+
+---
+
 ## 2026-06-11 — Full smoke test + AgentDrive install fix
 
 ### Added

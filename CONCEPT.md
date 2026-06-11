@@ -14,6 +14,29 @@ OpenMangos is an **adaptive terminal framework** — not another AI coding CLI. 
 
 ---
 
+## OpenMango — the open bet
+
+**OpenMangos** is the product name. **OpenMango** is the same thing — one mango, open by default. You'll see both on X and in the wild.
+
+The pattern in 2026 is familiar: beautiful agent experiences ship in tiers. A public baseline. A premium surface behind glass — invite-only, API-gated, or "available to partners." The substrate stays closed. Your memory stays in their vault. Your terminal stays their UX.
+
+OpenMango is the opposite wager:
+
+| Closed agent product | OpenMango |
+|---|---|
+| One vendor's model + UI | Any backend — OpenCode, Grok, Claude, Codex, Cursor |
+| Session memory in a walled garden | **Mangos Drive** on open AgentDrive — your namespace, your swarms |
+| "Trust us" orchestration | `om sense` → explainable situation graph; you see what adapted and why |
+| Install = account + subscription | `curl \| bash` → source on disk, Apache-2.0, forkable |
+
+We are not building another fable you rent. We are building the **operator layer** that stays public — the part that should have been open from the start: sense the real environment, pack honest context, route to the best tool, verify when work is done, remember across sessions without lock-in.
+
+Anthropic can keep the premium narrative models behind the door. OpenMango keeps the **terminal, the memory fabric, and the orchestration** on your machine, in the open, composable with whatever model you already trust.
+
+That is the point of the hard hat on the mascot. This is infrastructure work — not a demo behind glass.
+
+---
+
 ## The problem
 
 Today's terminal-native AI agents share the same skeleton:

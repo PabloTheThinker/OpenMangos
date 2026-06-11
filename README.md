@@ -23,13 +23,15 @@
 
 ---
 
-You already have the agents. OpenMangos makes the terminal worthy of them.
+You already have the agents. **OpenMangos** — *OpenMango* if you're on X — makes the terminal worthy of them.
 
 Run `om`. It reads your codebase — the stack, the infra, what is actually running — and shapes itself around the work in front of you. The right mode. The right context. The right backend. One command. No new editor. No model lock-in.
 
 OpenCode. Grok. Claude. Codex. Cursor. Orchestrated — with memory that compounds, healing when things drift, and verification when the session ends.
 
-Built by [Vektra Industries](https://vektraindustries.com). Open source. Apache-2.0.
+**The open bet:** premium agent surfaces keep closing behind tiers and APIs. OpenMango keeps the operator layer public — Apache-2.0, curl install, Mangos Drive on open [AgentDrive](https://github.com/PabloTheThinker/AgentDrive), forkable substrate. Not another fable you rent.
+
+Built by [Vektra Industries](https://vektraindustries.com).
 
 ## Install
 
