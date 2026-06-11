@@ -4,6 +4,21 @@ Notable changes to this project. Newest entries first.
 
 ---
 
+## 2026-06-11 — Mascot v2 (hard hat + name badge)
+
+### Changed
+
+- **`assets/openmangos-mascot.png`** — replaced with user asset `Open Mangos Mascotv2.png` (hard hat, tool belt, name badge)
+- **`openmangos-logo-text.svg`** / **dark** — regenerated from v2
+- **`assets/MASCOT.md`** — v2 source path and update workflow
+- **Vektra** `public/openmangos-portrait.png` + `openmangos-mark.png`
+
+### Added
+
+- **`assets/openmangos-mascot-logo.png`** — small embed for README SVG
+
+---
+
 ## 2026-06-11 — Mascot prompt doc
 
 ### Added
