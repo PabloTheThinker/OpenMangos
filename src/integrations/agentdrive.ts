@@ -1,16 +1,16 @@
 import { access } from 'node:fs/promises'
+import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { runCommand } from '../probes/util.js'
 import type { AgentDriveConfig, SituationGraph } from '../types.js'
 
-const DEFAULT_BIN =
-  '/home/pablothethinker/Vektra Industries/Software/AgentDrive/.venv/bin/agentdrive'
-
 export async function resolveAgentDriveBin(config: AgentDriveConfig = {}): Promise<string | null> {
+  const home = homedir()
   const candidates = [
     config.bin,
     process.env.AGENTDRIVE_BIN,
-    DEFAULT_BIN,
+    join(home, '.local', 'bin', 'agentdrive'),
+    join(home, '.agentdrive', 'venv', 'bin', 'agentdrive'),
     'agentdrive',
   ].filter(Boolean) as string[]
 

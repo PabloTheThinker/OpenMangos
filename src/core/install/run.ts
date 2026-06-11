@@ -3,6 +3,7 @@ import { join } from 'node:path'
 import { runCommand } from '../../probes/util.js'
 import { healOmLink, omPackageRoot } from '../heal/om.js'
 import { healOpenCodeBinaries, probeOpenCodeHealth } from '../heal/opencode.js'
+import { installAgentDrive } from './agentdrive.js'
 import type { InstallMethod } from './state.js'
 
 export type InstallRunResult = {
@@ -41,7 +42,12 @@ export async function installOpenCodeAi(prefix?: string): Promise<string[]> {
 
 export async function runInstallActions(
   cwd: string,
-  opts: { global?: boolean; withOpencode?: boolean; build?: boolean } = {},
+  opts: {
+    global?: boolean
+    withOpencode?: boolean
+    withAgentdrive?: boolean
+    build?: boolean
+  } = {},
 ): Promise<InstallRunResult> {
   const actions: string[] = []
   const errors: string[] = []
@@ -82,6 +88,12 @@ export async function runInstallActions(
       const upgraded = await healOpenCodeBinaries(cwd, health)
       actions.push(...upgraded)
     }
+  }
+
+  if (opts.withAgentdrive) {
+    const ad = await installAgentDrive()
+    for (const line of ad.actions) actions.push(line)
+    for (const line of ad.errors) errors.push(line)
   }
 
   return { actions, errors, method: 'npm-link' }

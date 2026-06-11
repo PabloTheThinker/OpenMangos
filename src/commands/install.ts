@@ -13,6 +13,7 @@ export function registerInstallCommands(program: Command): void {
     .option('-C, --directory <path>', 'workspace root', process.cwd())
     .option('--global', 'npm install -g openmangos (when published)')
     .option('--with-opencode', 'install OpenCode if missing')
+    .option('--with-agentdrive', 'install AgentDrive if missing (Mangos Drive memory)')
     .option('--no-build', 'skip npm run build')
     .option('--check', 'prerequisite checks only')
     .option('--json', 'JSON output')
@@ -21,6 +22,7 @@ export function registerInstallCommands(program: Command): void {
         directory: string
         global?: boolean
         withOpencode?: boolean
+        withAgentdrive?: boolean
         noBuild?: boolean
         check?: boolean
         json?: boolean
@@ -36,6 +38,7 @@ export function registerInstallCommands(program: Command): void {
               result: await runInstallActions(root, {
                 global: opts.global,
                 withOpencode: opts.withOpencode,
+                withAgentdrive: opts.withAgentdrive,
                 build: !opts.noBuild,
               }),
             }
@@ -65,6 +68,7 @@ export function registerInstallCommands(program: Command): void {
         const result = await runInstallActions(root, {
           global: opts.global,
           withOpencode: opts.withOpencode,
+          withAgentdrive: opts.withAgentdrive,
           build: !opts.noBuild,
         })
 
@@ -91,6 +95,7 @@ export function registerInstallCommands(program: Command): void {
     .option('-y, --yes', 'accept defaults (non-interactive friendly)')
     .option('--install', 'run om install before workspace setup')
     .option('--with-opencode', 'install OpenCode during install step')
+    .option('--with-agentdrive', 'install AgentDrive during prerequisites step')
     .option('--reset', 'clear onboarding completion and rerun')
     .option('--json', 'JSON result')
     .action(
@@ -99,6 +104,7 @@ export function registerInstallCommands(program: Command): void {
         yes?: boolean
         install?: boolean
         withOpencode?: boolean
+        withAgentdrive?: boolean
         reset?: boolean
         json?: boolean
       }) => {
@@ -116,6 +122,7 @@ export function registerInstallCommands(program: Command): void {
           yes: opts.yes,
           install: opts.install,
           withOpencode: opts.withOpencode,
+          withAgentdrive: opts.withAgentdrive,
         })
 
         if (opts.json) {

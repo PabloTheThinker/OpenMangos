@@ -73,13 +73,22 @@ export async function runInstallChecks(cwd: string): Promise<InstallCheck[]> {
     fixable: true,
   })
 
+  const python = await runCommand('python3', ['--version'], cwd, 3000)
+  checks.push({
+    id: 'python',
+    label: 'Python 3',
+    status: python.ok ? 'ok' : 'warn',
+    detail: python.ok ? python.stdout.trim() : 'not found (required for AgentDrive install)',
+    fixable: false,
+  })
+
   const adBin = await resolveAgentDriveBin({})
   checks.push({
     id: 'agentdrive',
     label: 'AgentDrive CLI',
     status: adBin ? 'ok' : 'warn',
-    detail: adBin ?? 'not found (Mangos Drive recall disabled)',
-    fixable: false,
+    detail: adBin ?? 'not found (Mangos Drive recall/remember disabled)',
+    fixable: true,
   })
 
   return checks

@@ -33,6 +33,7 @@ OM_HOME="${OM_HOME:-$HOME/.openmangos}"
 SRC_DIR="${OM_SRC:-$OM_HOME/src}"
 OM_ONBOARD_YES="${OM_ONBOARD_YES:-1}"
 OM_WITH_OPENCODE="${OM_WITH_OPENCODE:-1}"
+OM_WITH_AGENTDRIVE="${OM_WITH_AGENTDRIVE:-ask}"
 RUN_ONBOARD=1
 
 while [[ $# -gt 0 ]]; do
@@ -40,8 +41,10 @@ while [[ $# -gt 0 ]]; do
     --branch) BRANCH="$2"; shift 2 ;;
     --no-onboard) RUN_ONBOARD=0; shift ;;
     --no-opencode) OM_WITH_OPENCODE=0; shift ;;
+    --with-agentdrive) OM_WITH_AGENTDRIVE=1; shift ;;
+    --no-agentdrive) OM_WITH_AGENTDRIVE=0; shift ;;
     --help|-h)
-      echo "Usage: install.sh [--branch NAME] [--no-onboard] [--no-opencode]"
+      echo "Usage: install.sh [--branch NAME] [--no-onboard] [--no-opencode] [--with-agentdrive|--no-agentdrive]"
       exit 0
       ;;
     *) shift ;;
@@ -142,6 +145,9 @@ run_onboard() {
   fi
   if [[ "$OM_WITH_OPENCODE" == "1" ]]; then
     args+=(--with-opencode)
+  fi
+  if [[ "$OM_WITH_AGENTDRIVE" == "1" ]]; then
+    args+=(--with-agentdrive)
   fi
 
   log "om ${args[*]}"

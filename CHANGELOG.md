@@ -4,6 +4,31 @@ Notable changes to this project. Newest entries first.
 
 ---
 
+## 2026-06-11 — AgentDrive optional install during setup
+
+### Added
+
+- **`installAgentDrive()`** — curls `https://vektraindustries.com/agentdrive/install`, verifies `agentdrive --version` or `doctor`
+- **Onboarding prompt** — if AgentDrive missing: “Install AgentDrive for Mangos Drive memory?” (default yes)
+- **`om install --with-agentdrive`** · **`om onboard --with-agentdrive`**
+- **`install.sh`** flags: `--with-agentdrive` · `--no-agentdrive` (passes through to `om onboard`)
+- **Python 3** prerequisite check in `om install` / onboard step 2
+
+### Changed
+
+- **`resolveAgentDriveBin`** — looks at `~/.local/bin/agentdrive` and `~/.agentdrive/venv/bin/agentdrive` (removed dev-machine hardcoded path)
+
+### Verify
+
+```bash
+om install --check          # agentdrive row fixable if missing
+om onboard                  # prompts for AgentDrive when absent
+om onboard -y --with-agentdrive
+curl -fsSL https://vektraindustries.com/openmangos/install | bash -s -- --with-agentdrive
+```
+
+---
+
 ## 2026-06-11 — Session summary: v0.10.x ship + brand launch
 
 End-to-end pass: **product lifecycle**, **distribution**, **Vektra presence**, **GitHub brand**, **mascot character**.

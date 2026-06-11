@@ -118,9 +118,9 @@ AgentDrive is the memory layer. OpenMangos is how you operate it.
 
 ## Requirements
 
-Node.js 20+. git. At least one agent CLI on your PATH — OpenCode recommended.
+Node.js 20+. git. Python 3 for AgentDrive. At least one agent CLI on your PATH — OpenCode recommended.
 
-Optional: [AgentDrive](https://github.com/PabloTheThinker/AgentDrive) for Mangos Drive memory.
+**AgentDrive** powers Mangos Drive memory. `om onboard` checks for it and offers to install via the [official installer](https://vektraindustries.com/agentdrive/install).
 
 ## Develop
 

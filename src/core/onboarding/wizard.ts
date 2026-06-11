@@ -4,6 +4,7 @@ import { sortAvailableBackends } from '../backend-select.js'
 import { initWorkspace } from '../init.js'
 import { inspectMangosDrive } from '../heal/mangos-drive.js'
 import { healMangosDrive } from '../heal/mangos-drive.js'
+import { installAgentDrive } from '../install/agentdrive.js'
 import { checkGlyph, runInstallChecks, type InstallCheck } from '../install/checks.js'
 import { runInstallActions } from '../install/run.js'
 import { loadInstallState, saveInstallState } from '../install/state.js'
@@ -17,6 +18,7 @@ export type OnboardOptions = {
   yes?: boolean
   install?: boolean
   withOpencode?: boolean
+  withAgentdrive?: boolean
 }
 
 export type OnboardResult = {
@@ -139,6 +141,27 @@ export async function runOnboardingWizard(opts: OnboardOptions): Promise<Onboard
     console.error('')
     checks = await runInstallChecks(root)
     printChecks(checks)
+  }
+
+  const adMissing = checks.find((c) => c.id === 'agentdrive' && c.status !== 'ok')
+  if (adMissing) {
+    const shouldInstallAd =
+      opts.withAgentdrive ??
+      (opts.yes ? true : await promptYesNo('Install AgentDrive for Mangos Drive memory?', true))
+
+    if (shouldInstallAd) {
+      console.error(pc.cyan('  ↻ Installing AgentDrive…'))
+      const ad = await installAgentDrive()
+      actions.push(...ad.actions)
+      for (const line of ad.actions) console.error(pc.green(`  ↻ ${line}`))
+      for (const err of ad.errors) console.error(pc.red(`  ✗ ${err}`))
+      console.error('')
+      checks = await runInstallChecks(root)
+      printChecks(checks)
+    } else {
+      console.error(pc.yellow('  ⚠ Skipped AgentDrive — Mangos Drive recall/remember will be limited'))
+      console.error('')
+    }
   }
 
   // Step 3 — Workspace
