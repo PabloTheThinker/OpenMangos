@@ -1,0 +1,5 @@
+node_modules/
+dist/
+.openmangos/context-pack.*
+*.log
+.DS_Store
