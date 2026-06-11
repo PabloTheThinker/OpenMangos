@@ -30,6 +30,15 @@ import { runCommand } from '../probes/util.js'
 
 export function registerCommands(program: Command): void {
   program
+    .command('tui')
+    .description('Launch full-screen OpenMangos terminal (default when no args)')
+    .option('-C, --directory <path>', 'workspace root', process.cwd())
+    .action(async (opts: { directory: string }) => {
+      const { runTui } = await import('../tui/index.js')
+      await runTui({ directory: resolve(opts.directory) })
+    })
+
+  program
     .command('sense')
     .description('Probe the workspace and print a situation report')
     .option('-C, --directory <path>', 'workspace root', process.cwd())

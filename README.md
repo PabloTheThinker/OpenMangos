@@ -19,10 +19,29 @@ Or run without linking:
 npm run dev -- sense
 ```
 
+## Terminal experience
+
+Running `om` with no arguments launches the **full-screen TUI** — inspired by Factory Droid, Codex CLI, and Claude Code, with OpenMangos’s always-visible situation strip.
+
+| Key / input | Action |
+|---|---|
+| `Tab` | Cycle mode (build → debug → infra → review → ship) |
+| `Shift+Tab` | Cycle backend |
+| `Ctrl+G` | Run routed session (`sense` + `pack` + `wrap`) |
+| `Ctrl+O` | Sessions overlay |
+| `Ctrl+T` | Mission plan overlay |
+| `!` | Bash mode (run shell command) |
+| `?` or `/help` | Shortcuts panel |
+| Plain text | Route task → suggests backend + mode |
+| `/sense`, `/wrap`, … | Full slash palette |
+
+Use `om sense`, `om run grok`, etc. for non-interactive CLI mode.
+
 ## Commands
 
 | Command | Description |
 |---|---|
+| `om` / `om tui` | Full-screen adaptive terminal |
 | `om init` | Scaffold `.openmangos/` (profile, config) |
 | `om sense` | Probe workspace and print situation report |
 | `om suggest` | Show suggested mode + reasoning |

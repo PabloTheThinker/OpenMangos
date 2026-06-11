@@ -6,11 +6,23 @@ const program = new Command()
 program
   .name('om')
   .description('OpenMangos — adaptive terminal framework')
-  .version('0.4.0')
+  .version('0.5.0')
 
 registerCommands(program)
 
-program.parseAsync(process.argv).catch((error: unknown) => {
+const args = process.argv.slice(2)
+const isDefaultLaunch = args.length === 0
+
+async function main(): Promise<void> {
+  if (isDefaultLaunch) {
+    const { runTui } = await import('./tui/index.js')
+    await runTui({ directory: process.cwd() })
+    return
+  }
+  await program.parseAsync(process.argv)
+}
+
+main().catch((error: unknown) => {
   console.error(error instanceof Error ? error.message : error)
   process.exit(1)
 })

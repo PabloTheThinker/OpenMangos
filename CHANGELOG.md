@@ -4,6 +4,33 @@ Notable changes to this project. Newest entries first.
 
 ---
 
+## 2026-06-11 — v0.5.0 full-screen terminal experience
+
+### Added
+
+- **`om` / `om tui`** — full-screen adaptive terminal (default when no args)
+- Always-visible **situation strip** — mode, stack, infra, health, backend (OpenMangos differentiator vs Factory/Codex static shells)
+- **Slash commands** — `/sense`, `/mode`, `/tools`, `/route`, `/run`, `/wrap`, `/verify`, `/pack`, `/mission`, `/sessions`, `/recall`, `/doctor`, `/help`
+- **Keyboard shortcuts** (Factory/Codex/Claude patterns) — Tab mode, Shift+Tab backend, Ctrl+G run, Ctrl+O sessions, Ctrl+T mission, `!` bash, `?` help
+- Plain-text task input → automatic route suggestion before launch
+- Mango/amber-on-dark theme in `src/tui/`
+
+### Changed
+
+- `om` with no subcommand launches TUI instead of Commander help
+- Version 0.5.0
+
+### Verify
+
+```bash
+npm run build && npm link
+om          # full-screen TUI
+om tui -C . # explicit launch
+om sense    # CLI still works
+```
+
+---
+
 ## 2026-06-11 — v0.4.0 Phase 3 living framework
 
 ### Added

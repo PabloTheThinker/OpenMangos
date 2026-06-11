@@ -1,6 +1,6 @@
 {
   "name": "openmangos",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Adaptive terminal framework — senses your environment, adapts to the problem, orchestrates any AI backend",
   "type": "module",
   "bin": {

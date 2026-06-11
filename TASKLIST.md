@@ -68,7 +68,7 @@ Legend: ✅ done · 🔄 in progress · ⬜ planned
 | 3.1 | AgentDrive integration | ✅ | `agentdrive experience record` on wrap |
 | 3.2 | Cross-session memory recall | ✅ | `om recall` local + AgentDrive context-pack |
 | 3.3 | Team-shared profiles | ✅ | `om team export` → team.yaml |
-| 3.4 | TUI dashboard (optional) | ⬜ | Logs, diffs, infra map panels |
+| 3.4 | TUI dashboard (optional) | ✅ | Full-screen `om`/`om tui`; situation strip, slash cmds, overlays |
 | 3.5 | `om watch` — live situation refresh | ✅ | Poll + fs.watch triggers |
 | 3.6 | Mission orchestrator | 🔄 | `om mission run` with verify gates; multi-worker ⬜ |
 | 3.7 | Computer-use validation hook | ⬜ | UI smoke via playwright |
@@ -143,4 +143,4 @@ openmangos/
 
 ---
 
-*Updated: 2026-06-11 — v0.4.0 Phase 3 core: AgentDrive, watch, roles, mission run*
+*Updated: 2026-06-11 — v0.5.0 full-screen TUI (Factory/Codex/Claude patterns + situation strip)*
