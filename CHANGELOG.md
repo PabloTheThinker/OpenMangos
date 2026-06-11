@@ -4,6 +4,23 @@ Notable changes to this project. Newest entries first.
 
 ---
 
+## 2026-06-11 — OpenMangos logo + README hero
+
+### Added
+
+- **`assets/openmangos-mark.jpg`** — app icon mark (mango + terminal chevron), distinct from Vektra site hero
+- **`assets/openmangos-logo.svg`** / **`openmangos-logo-dark.svg`** — horizontal wordmark for light/dark GitHub themes
+
+### Changed
+
+- **README.md** — hero logo block with theme-aware wordmark
+
+### Verify
+
+- `https://github.com/PabloTheThinker/OpenMangos` — logo renders in README header
+
+---
+
 ## 2026-06-11 — README rewrite (Apple-style)
 
 ### Changed

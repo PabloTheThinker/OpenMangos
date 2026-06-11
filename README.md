@@ -1,5 +1,15 @@
 <p align="center">
-  <strong>OpenMangos</strong><br />
+  <img src="assets/openmangos-mark.jpg" alt="" width="112" />
+</p>
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/openmangos-logo-dark.svg" />
+    <img src="assets/openmangos-logo.svg" alt="OpenMangos" width="360" />
+  </picture>
+</p>
+
+<p align="center">
   <sub>The terminal adapts to the problem.<br />The model adapts to the terminal.</sub>
 </p>
 
