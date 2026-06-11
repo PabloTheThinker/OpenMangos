@@ -8,7 +8,8 @@ import type { BackendId, LearningConfig, LearningEvent, SituationGraph } from '.
 import type { VerificationResult } from '../verify/types.js'
 import { appendLearningEvent } from './events.js'
 import { recallSkillsForSituation } from './recall.js'
-import { upsertSkill } from './skills.js'
+import { developSkillsFromSession } from './develop.js'
+import { skillSlugForSituation, upsertSkill } from './skills.js'
 
 export interface SessionExitContext {
   root: string
@@ -24,6 +25,7 @@ export interface LearningLoopResult {
   event: LearningEvent
   skillSlug?: string
   skillCreated?: boolean
+  derivedSkills?: string[]
   message: string
 }
 
@@ -33,6 +35,7 @@ function learningConfig(config: Awaited<ReturnType<typeof loadConfig>>): Learnin
     auto_learn: config.learning?.auto_learn !== false,
     auto_recall: config.learning?.auto_recall !== false,
     nudge_agents: config.learning?.nudge_agents !== false,
+    auto_develop: config.learning?.auto_develop !== false,
     min_success_exit_code: config.learning?.min_success_exit_code ?? 0,
     ...config.learning,
   }
@@ -63,11 +66,34 @@ export async function runLearningLoopOnExit(ctx: SessionExitContext): Promise<Le
     skillSlug: undefined,
   })
 
-  if (!cfg.enabled || !cfg.auto_learn || !succeeded) {
-    return {
-      event,
-      message: succeeded ? 'learning recorded (no skill extraction)' : 'session outcome recorded',
+  if (!cfg.enabled) {
+    return { event, message: 'learning disabled' }
+  }
+
+  if (!succeeded) {
+    const parentSlug = skillSlugForSituation(ctx.situation, ctx.backend)
+    let derivedSkills: string[] = []
+    if (cfg.auto_develop) {
+      derivedSkills = await developSkillsFromSession(ctx.root, {
+        situation: ctx.situation,
+        backend: ctx.backend,
+        parentSlug,
+        verification: ctx.verification,
+        outcome: 'failure',
+        verificationCommands: suggestVerificationCommands(ctx.situation),
+      })
+      event.derivedSkills = derivedSkills
+      event.skillSlug = parentSlug
     }
+    const msg =
+      derivedSkills.length ?
+        `failure recorded · derived recovery skill(s): ${derivedSkills.join(', ')}`
+      : 'session outcome recorded'
+    return { event, derivedSkills, message: msg }
+  }
+
+  if (!cfg.auto_learn) {
+    return { event, message: 'learning recorded (auto_learn off)' }
   }
 
   const verificationCommands = suggestVerificationCommands(ctx.situation)
@@ -85,13 +111,39 @@ export async function runLearningLoopOnExit(ctx: SessionExitContext): Promise<Le
   })
 
   event.skillSlug = slug
+
+  let derivedSkills: string[] = []
+  if (cfg.auto_develop) {
+    derivedSkills = await developSkillsFromSession(ctx.root, {
+      situation: ctx.situation,
+      backend: ctx.backend,
+      parentSlug: slug,
+      verification: ctx.verification,
+      outcome: 'success',
+      verificationCommands,
+    })
+    event.derivedSkills = derivedSkills
+    for (const child of derivedSkills) {
+      await recordLearningToMangosDrive(
+        ctx.root,
+        ctx.situation,
+        config,
+        child,
+        `derived skill from ${slug}`,
+      )
+    }
+  }
+
   await recordLearningToMangosDrive(ctx.root, ctx.situation, config, slug, meta.description)
 
+  const derivedMsg =
+    derivedSkills.length ? ` · derived ${derivedSkills.length} new skill(s)` : ''
   return {
     event,
     skillSlug: slug,
     skillCreated: created,
-    message: created ? `new Mangos skill: ${slug}` : `updated Mangos skill: ${slug}`,
+    derivedSkills,
+    message: `${created ? 'new' : 'updated'} Mangos skill: ${slug}${derivedMsg}`,
   }
 }
 
@@ -147,11 +199,27 @@ export async function manualLearnNudge(
 
   await recordLearningToMangosDrive(root, situation, config, slug, meta.description)
 
+  let derivedSkills: string[] = []
+  if (cfg.auto_develop) {
+    derivedSkills = await developSkillsFromSession(root, {
+      situation,
+      backend: resolvedBackend,
+      parentSlug: slug,
+      outcome: 'nudge',
+      note,
+      verificationCommands,
+    })
+    event.derivedSkills = derivedSkills
+  }
+
+  const derivedMsg =
+    derivedSkills.length ? ` · forked ${derivedSkills.length} skill(s)` : ''
   return {
     event,
     skillSlug: slug,
     skillCreated: created,
-    message: `persisted skill ${slug} from nudge`,
+    derivedSkills,
+    message: `persisted skill ${slug} from nudge${derivedMsg}`,
   }
 }
 

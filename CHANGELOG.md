@@ -4,6 +4,20 @@ Notable changes to this project. Newest entries first.
 
 ---
 
+## 2026-06-11 — Skill derivation (learning develops new skills)
+
+### Added
+
+- **`src/learning/develop.ts`** — child skills from sessions: infra, recovery, verified, mode-drift, nudge forks, playbooks
+- **`om learn develop`** — scan recent events and spawn derived skills
+- **Skill lineage** — `parent_skill` + `derived_from` in SKILL.md frontmatter
+
+### Changed
+
+- **v0.11.1** — `learning.auto_develop` (default true); failures derive recovery skills; successes fork specializations
+
+---
+
 ## 2026-06-11 — Mangos learning loop (Hermes-style self-learning)
 
 ### Added

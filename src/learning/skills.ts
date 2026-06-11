@@ -55,7 +55,7 @@ function parseFrontmatter(text: string): { meta: Record<string, unknown>; body: 
   return { meta, body }
 }
 
-function serializeFrontmatter(meta: MangoSkillMeta): string {
+export function serializeFrontmatter(meta: MangoSkillMeta): string {
   const om = meta.openmangos
   const lines = [
     '---',
@@ -68,12 +68,30 @@ function serializeFrontmatter(meta: MangoSkillMeta): string {
     `stack: [${om.stack.join(', ')}]`,
     `tags: [${om.tags.join(', ')}]`,
     `success_count: ${om.success_count}`,
+    ...(om.parent_skill ? [`parent_skill: ${om.parent_skill}`] : []),
+    ...(om.derived_from ? [`derived_from: ${om.derived_from}`] : []),
     `created_at: ${om.created_at}`,
     `updated_at: ${om.updated_at}`,
     '---',
     '',
   ]
   return lines.join('\n')
+}
+
+export async function writeSkillDocument(
+  root: string,
+  meta: MangoSkillMeta,
+  body: string,
+): Promise<void> {
+  const slug = meta.name
+  await mkdir(skillDir(root, slug), { recursive: true })
+  await writeFile(skillFile(root, slug), `${serializeFrontmatter(meta)}${body.trim()}\n`, 'utf8')
+
+  const index = await readSkillIndex(root)
+  const without = index.filter((s) => s.name !== slug)
+  without.push(meta)
+  without.sort((a, b) => b.openmangos.success_count - a.openmangos.success_count)
+  await writeSkillIndex(root, without)
 }
 
 export function buildSkillBody(
@@ -151,6 +169,8 @@ export async function parseSkillFile(path: string): Promise<ParsedSkill | null> 
           backend: raw.backend as MangoSkillMeta['openmangos']['backend'],
           stack,
           success_count: Number(raw.success_count ?? 0),
+          parent_skill: raw.parent_skill ? String(raw.parent_skill) : undefined,
+          derived_from: raw.derived_from ? String(raw.derived_from) : undefined,
           created_at: String(raw.created_at ?? ''),
           updated_at: String(raw.updated_at ?? ''),
         },
@@ -240,16 +260,7 @@ export async function upsertSkill(
     body = buildSkillBody(situation, backend, options.verificationCommands, options.learnedFrom)
   }
 
-  const dir = skillDir(root, slug)
-  await mkdir(dir, { recursive: true })
-  await writeFile(skillFile(root, slug), `${serializeFrontmatter(meta)}${body}\n`, 'utf8')
-
-  const index = await readSkillIndex(root)
-  const without = index.filter((s) => s.name !== slug)
-  without.push(meta)
-  without.sort((a, b) => b.openmangos.success_count - a.openmangos.success_count)
-  await writeSkillIndex(root, without)
-
+  await writeSkillDocument(root, meta, body)
   return { slug, created: !existing, meta }
 }
 
@@ -274,7 +285,20 @@ export function scoreSkillForSituation(
     if (om.tags.includes(stackItem.toLowerCase())) score += 1
   }
   score += Math.min(om.success_count, 5) * 0.5
+  if (om.parent_skill && situation.stack.some((s) => om.tags.includes(s.toLowerCase()))) {
+    score += 1
+  }
+  for (const infra of situation.infra) {
+    if (om.tags.includes(infraToken(infra))) score += 2
+  }
   return score
+}
+
+function infraToken(infra: string): string {
+  if (infra.includes('compose') || infra.includes('docker')) return 'docker'
+  if (infra.includes('terraform')) return 'terraform'
+  if (infra.includes('kubernetes') || infra.includes('k8s')) return 'k8s'
+  return infra.toLowerCase().replace(/[^a-z0-9]+/g, '-')
 }
 
 export async function searchSkills(

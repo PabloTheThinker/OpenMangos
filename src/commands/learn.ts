@@ -4,6 +4,7 @@ import pc from 'picocolors'
 import { loadConfig } from '../core/config.js'
 import { buildSituation } from '../core/situation.js'
 import { listLearningEvents } from '../learning/events.js'
+import { developSkillsFromRecentEvents } from '../learning/develop.js'
 import { manualLearnNudge } from '../learning/loop.js'
 import { recallSkillsForSituation } from '../learning/recall.js'
 import { getSkill, listSkills, skillSlugForSituation } from '../learning/skills.js'
@@ -28,6 +29,7 @@ export function registerLearnCommands(program: Command): void {
       console.log(`  enabled: ${config.learning?.enabled !== false}`)
       console.log(`  auto_learn: ${config.learning?.auto_learn !== false}`)
       console.log(`  auto_recall: ${config.learning?.auto_recall !== false}`)
+      console.log(`  auto_develop: ${config.learning?.auto_develop !== false}`)
       console.log(`  skills: ${skills.length}`)
       console.log(`  events: ${events.length} recent`)
       if (recalled.length) {
@@ -51,6 +53,25 @@ export function registerLearnCommands(program: Command): void {
       const result = await manualLearnNudge(root, opts.note, backend)
       console.log(pc.green(`✓ ${result.message}`))
       if (result.skillSlug) console.log(`  skill: ${result.skillSlug}`)
+      if (result.derivedSkills?.length) {
+        console.log(`  derived: ${result.derivedSkills.join(', ')}`)
+      }
+    })
+
+  learn
+    .command('develop')
+    .description('Derive new child skills from recent learning events')
+    .option('-C, --directory <path>', 'workspace root', process.cwd())
+    .option('--limit <n>', 'events to scan', '10')
+    .action(async (opts: { directory: string; limit: string }) => {
+      const root = resolve(opts.directory)
+      const result = await developSkillsFromRecentEvents(root, Number(opts.limit))
+      if (result.derived.length) {
+        console.log(pc.green(`✓ derived ${result.derived.length} skill(s) from ${result.scanned} event(s)`))
+        for (const slug of result.derived) console.log(`  - ${slug}`)
+      } else {
+        console.log(pc.dim(`(no new skills — scanned ${result.scanned} event(s))`))
+      }
     })
 
   learn
@@ -63,7 +84,7 @@ export function registerLearnCommands(program: Command): void {
       const events = await listLearningEvents(root, Number(opts.limit))
       for (const event of events) {
         console.log(
-          `${event.recordedAt} · ${event.outcome} · ${event.mode}/${event.backend} · exit ${event.exitCode}${event.skillSlug ? ` · ${event.skillSlug}` : ''}`,
+          `${event.recordedAt} · ${event.outcome} · ${event.mode}/${event.backend} · exit ${event.exitCode}${event.skillSlug ? ` · ${event.skillSlug}` : ''}${event.derivedSkills?.length ? ` · +${event.derivedSkills.join(',')}` : ''}`,
         )
         if (event.note) console.log(pc.dim(`  ${event.note}`))
       }
@@ -81,9 +102,11 @@ export function registerLearnCommands(program: Command): void {
       const items = await listSkills(root)
       for (const item of items) {
         const om = item.meta.openmangos
+        const parent = om.parent_skill ? ` ← ${om.parent_skill}` : ''
         console.log(
-          `${item.meta.name} · ${om.mode}/${om.backend} · successes ${om.success_count} · ${item.meta.description}`,
+          `${item.meta.name} · ${om.mode}/${om.backend} · ${om.category} · successes ${om.success_count}${parent}`,
         )
+        console.log(pc.dim(`  ${item.meta.description}`))
       }
       if (!items.length) console.log(pc.dim('(no skills yet — complete a successful om wrap session)'))
     })

@@ -103,6 +103,8 @@ export interface MangoSkillOpenMangosMeta {
   success_count: number
   created_at: string
   updated_at: string
+  parent_skill?: string
+  derived_from?: string
 }
 
 export interface MangoSkillMeta {
@@ -136,6 +138,7 @@ export interface LearningEvent {
   verificationOk?: boolean
   outcome: 'success' | 'failure' | 'nudge'
   skillSlug?: string
+  derivedSkills?: string[]
   note?: string
 }
 
@@ -147,6 +150,8 @@ export interface LearningConfig {
   auto_recall?: boolean
   /** Hermes-style nudge in AGENTS.md (default: true). */
   nudge_agents?: boolean
+  /** Spawn specialized child skills from sessions (default: true). */
+  auto_develop?: boolean
   min_success_exit_code?: number
 }
 
