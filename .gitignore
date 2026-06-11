@@ -1,7 +1,5 @@
 node_modules/
 dist/
-.openmangos/context-pack.*
-.openmangos/memory/
-.openmangos/sessions/
+.openmangos/
 *.log
 .DS_Store
