@@ -35,6 +35,11 @@ describe('bootstrap', () => {
     assert.equal(resolveBootstrapBackend(s), 'codex')
   })
 
+  it('prefers opencode over profile grok when both installed', () => {
+    const s = situation(['opencode', 'grok'], 'grok')
+    assert.equal(resolveBootstrapBackend(s), 'opencode')
+  })
+
   it('detects warp host env', () => {
     const info = detectTerminalHost({ WARP_IS_LOCAL_SHELL_SESSION: '1' })
     assert.equal(info.host, 'warp')

@@ -1,9 +1,16 @@
 import pc from 'picocolors'
 import { wrapAndLaunch } from '../adapters/wrap.js'
 import { loadConfig } from './config.js'
+import {
+  pickBackendInteractive,
+  shouldShowBackendPicker,
+  sortAvailableBackends,
+} from './backend-select.js'
 import { detectTerminalHost } from './host.js'
+import { loadProfile, saveProfile } from './profile.js'
 import { buildSituation } from './situation.js'
 import type { BackendId, SituationGraph } from '../types.js'
+import { isBackendId } from './backends.js'
 
 export interface BootstrapOptions {
   directory: string
@@ -11,6 +18,8 @@ export interface BootstrapOptions {
   task?: string
   verifyOnExit?: boolean
   dryRun?: boolean
+  yes?: boolean
+  pick?: boolean
 }
 
 export interface BootstrapResult {
@@ -19,19 +28,58 @@ export interface BootstrapResult {
   notes: string[]
 }
 
+const OSS_FIRST: BackendId[] = ['opencode', 'codex', 'grok', 'claude', 'cursor']
+
 export function resolveBootstrapBackend(
   situation: SituationGraph,
   explicit?: BackendId,
 ): BackendId {
   if (explicit && situation.backends.available.includes(explicit)) return explicit
-  if (situation.backends.available.includes(situation.backends.preferred)) {
-    return situation.backends.preferred
+
+  const envBackend = process.env.OPENMANGOS_BACKEND
+  if (envBackend && isBackendId(envBackend) && situation.backends.available.includes(envBackend)) {
+    return envBackend
   }
-  const ossFirst: BackendId[] = ['opencode', 'codex', 'grok', 'claude', 'cursor']
-  for (const id of ossFirst) {
+
+  for (const id of OSS_FIRST) {
     if (situation.backends.available.includes(id)) return id
   }
   return situation.backends.preferred
+}
+
+export async function resolveBootstrapBackendInteractive(
+  root: string,
+  situation: SituationGraph,
+  options: Pick<BootstrapOptions, 'backend' | 'yes' | 'pick'>,
+): Promise<BackendId> {
+  const available = situation.backends.available
+  if (!available.length) {
+    throw new Error('No agent backends on PATH. Install opencode, grok, claude, codex, or cursor CLI.')
+  }
+
+  if (options.backend && available.includes(options.backend)) return options.backend
+
+  const profile = await loadProfile(root)
+
+  if (
+    shouldShowBackendPicker({
+      explicit: options.backend,
+      yes: options.yes,
+      pick: options.pick,
+      available,
+    })
+  ) {
+    return pickBackendInteractive(sortAvailableBackends(available), {
+      current: profile.backends?.preferred,
+      remember: async (backend) => {
+        profile.backends = { ...profile.backends, preferred: backend }
+        await saveProfile(root, profile)
+        console.error(pc.dim(`Saved preferred backend: ${backend}`))
+      },
+    })
+  }
+
+  return resolveBootstrapBackend(situation, options.backend)
 }
 
 export async function runBootstrap(options: BootstrapOptions): Promise<BootstrapResult> {
@@ -43,7 +91,6 @@ export async function runBootstrap(options: BootstrapOptions): Promise<Bootstrap
     const { routeTask } = await import('./router.js')
     const route = routeTask(options.task, situation, config)
     if (route.mode !== situation.mode) {
-      const { loadProfile, saveProfile } = await import('./profile.js')
       const profile = await loadProfile(root)
       profile.mode = route.mode
       await saveProfile(root, profile)
@@ -51,7 +98,7 @@ export async function runBootstrap(options: BootstrapOptions): Promise<Bootstrap
     }
   }
 
-  const backend = resolveBootstrapBackend(situation, options.backend)
+  const backend = await resolveBootstrapBackendInteractive(root, situation, options)
   const host = detectTerminalHost()
   const notes: string[] = [...host.hints]
 
@@ -75,7 +122,7 @@ export async function runBootstrap(options: BootstrapOptions): Promise<Bootstrap
   }
 
   console.error(pc.bold(pc.yellow(`OpenMangos boot → ${backend}`)))
-  console.error(pc.dim('Full TUI later (Grok Build-style) — orchestration layer first.\n'))
+  console.error(pc.dim('Tip: om opencode · om grok · om boot --yes\n'))
 
   await wrapAndLaunch(root, backend, {
     situation,
@@ -99,6 +146,10 @@ function printBootstrapBanner(situation: SituationGraph, backend: BackendId, hos
       `  mode ${situation.mode} · stack ${stack} · infra ${infra}${health ? ` · ${health}` : ''}`,
     ),
   )
-  console.error(pc.dim(`  backend ${backend} · host ${host} · workspace ${situation.workspace}`))
+  console.error(
+    pc.dim(
+      `  backend ${backend} · installed ${situation.backends.available.join(', ') || 'none'} · host ${host}`,
+    ),
+  )
   console.error('')
 }

@@ -4,6 +4,30 @@ Notable changes to this project. Newest entries first.
 
 ---
 
+## 2026-06-11 — v0.6.1 backend picker + `om opencode` shorthand
+
+### Added
+
+- **`om opencode` / `om grok`** — launch shorthand (was only `om boot opencode`)
+- **Interactive backend picker** when multiple agents on PATH (`om` in a TTY)
+- **`om backends`** — list installed backends; `om backends --set opencode`
+- **`om boot --yes`** — skip picker; **`om boot --pick`** — force picker
+
+### Fixed
+
+- Default launch no longer silently uses stale `profile.backends.preferred: grok` over OpenCode
+- OSS-first default when skipping picker: opencode → codex → grok → …
+
+### Verify
+
+```bash
+om opencode --dry-run
+om backends --set opencode
+om   # picker if multiple installed
+```
+
+---
+
 ## 2026-06-11 — v0.6.0 orchestration-first (OpenCode + bootstrap)
 
 ### Added

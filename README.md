@@ -33,7 +33,14 @@ npm run dev -- sense
 
 ## Terminal experience
 
-Running **`om`** with no arguments runs **adaptive bootstrap**: probe workspace → inject context → launch your agent (default: OpenCode).
+Running **`om`** probes the workspace, shows a **backend picker** if you have multiple agents installed, then launches with full context.
+
+```bash
+om              # picker (opencode, grok, claude, …)
+om opencode     # direct launch
+om grok -y      # skip picker
+om backends --set opencode   # remember choice
+```
 
 Preview orchestrator TUI: **`om tui`** (not the final Grok-style shell).
 

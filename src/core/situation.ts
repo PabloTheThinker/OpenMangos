@@ -61,7 +61,7 @@ export async function buildSituation(rootInput?: string): Promise<SituationGraph
   )
 
   const preferredCandidate =
-    profile.backends?.preferred ?? config.backends?.preferred ?? 'grok'
+    profile.backends?.preferred ?? config.backends?.preferred ?? 'opencode'
   const preferred: BackendId =
     availableBackends.includes(preferredCandidate) ? preferredCandidate
     : availableBackends[0] ?? 'grok'

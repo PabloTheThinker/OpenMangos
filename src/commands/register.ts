@@ -37,8 +37,10 @@ export function registerCommands(program: Command): void {
     .option('-C, --directory <path>', 'workspace root', process.cwd())
     .option('--task <text>', 'route mode/backend from task before launch')
     .option('--dry-run', 'show bootstrap plan without launching')
+    .option('--pick', 'always show backend picker when multiple installed')
+    .option('-y, --yes', 'skip picker; use OSS-first / preferred default')
     .option('--verify-on-exit', 'run om verify when backend exits')
-    .action(async (backendArg: string | undefined, opts: { directory: string; task?: string; dryRun?: boolean; verifyOnExit?: boolean }) => {
+    .action(async (backendArg: string | undefined, opts: { directory: string; task?: string; dryRun?: boolean; pick?: boolean; yes?: boolean; verifyOnExit?: boolean }) => {
       const root = resolve(opts.directory)
       const backend = backendArg && isBackendId(backendArg) ? backendArg : undefined
       await runBootstrap({
@@ -46,8 +48,45 @@ export function registerCommands(program: Command): void {
         backend,
         task: opts.task,
         dryRun: opts.dryRun,
+        pick: opts.pick,
+        yes: opts.yes,
         verifyOnExit: opts.verifyOnExit,
       })
+    })
+
+  program
+    .command('backends')
+    .description('List installed agent backends and set preferred')
+    .option('-C, --directory <path>', 'workspace root', process.cwd())
+    .option('--set <backend>', 'save preferred backend to profile')
+    .action(async (opts: { directory: string; set?: string }) => {
+      const root = resolve(opts.directory)
+      const situation = await buildSituation(root)
+      if (opts.set) {
+        if (!isBackendId(opts.set)) {
+          console.error('Unknown backend')
+          process.exit(1)
+        }
+        if (!situation.backends.available.includes(opts.set)) {
+          console.error(`${opts.set} not on PATH`)
+          process.exit(1)
+        }
+        const { loadProfile, saveProfile } = await import('../core/profile.js')
+        const profile = await loadProfile(root)
+        profile.backends = { ...profile.backends, preferred: opts.set }
+        const path = await saveProfile(root, profile)
+        console.log(`preferred backend: ${opts.set}`)
+        console.log(`profile: ${path}`)
+        return
+      }
+      console.log('\nInstalled backends:\n')
+      for (const b of ['opencode', 'grok', 'claude', 'codex', 'cursor'] as const) {
+        const on = situation.backends.available.includes(b)
+        const mark = situation.backends.preferred === b ? ' ← preferred' : ''
+        console.log(`  ${on ? '✓' : '○'} ${b}${mark}`)
+      }
+      console.log('\nSet: om backends --set opencode')
+      console.log('Launch: om opencode · om grok · om (picker)\n')
     })
 
   program
