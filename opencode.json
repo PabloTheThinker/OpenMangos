@@ -1,0 +1,13 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    ".openmangos/context-pack.md",
+    "AGENTS.md"
+  ],
+  "default_agent": "plan",
+  "_openmangos": {
+    "mode": "review",
+    "syncedAt": "2026-06-11T09:13:26.679Z",
+    "contextPack": "/home/pablothethinker/Vektra Industries/Software/OpenMangos/.openmangos/context-pack.md"
+  }
+}

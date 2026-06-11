@@ -6,7 +6,7 @@ const program = new Command()
 program
   .name('om')
   .description('OpenMangos — adaptive terminal framework')
-  .version('0.5.0')
+  .version('0.6.0')
 
 registerCommands(program)
 
@@ -15,8 +15,8 @@ const isDefaultLaunch = args.length === 0
 
 async function main(): Promise<void> {
   if (isDefaultLaunch) {
-    const { runTui } = await import('./tui/index.js')
-    await runTui({ directory: process.cwd() })
+    const { runBootstrap } = await import('./core/bootstrap.js')
+    await runBootstrap({ directory: process.cwd() })
     return
   }
   await program.parseAsync(process.argv)

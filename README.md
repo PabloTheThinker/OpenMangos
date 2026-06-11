@@ -19,9 +19,23 @@ Or run without linking:
 npm run dev -- sense
 ```
 
+## Architecture (phased)
+
+**Phase 1 (now):** OpenMangos is the **adaptive orchestration layer** — it does not replace OpenCode or Warp.
+
+| Layer | Tool | Role |
+|--------|------|------|
+| Substrate | **OpenMangos (`om`)** | Sense, mode, route, context pack, verify, memory |
+| Agent (OSS) | **OpenCode** | Default agent runtime (MIT) |
+| Terminal ADE | **Warp** (optional) | Host tabs for Claude/Codex/OpenCode |
+
+**Phase 2 (later):** Full Grok Build-style terminal experience built on top once orchestration is proven.
+
 ## Terminal experience
 
-Running `om` with no arguments launches the **full-screen TUI** — inspired by Factory Droid, Codex CLI, and Claude Code, with OpenMangos’s always-visible situation strip.
+Running **`om`** with no arguments runs **adaptive bootstrap**: probe workspace → inject context → launch your agent (default: OpenCode).
+
+Preview orchestrator TUI: **`om tui`** (not the final Grok-style shell).
 
 | Key / input | Action |
 |---|---|
@@ -41,7 +55,8 @@ Use `om sense`, `om run grok`, etc. for non-interactive CLI mode.
 
 | Command | Description |
 |---|---|
-| `om` / `om tui` | Full-screen adaptive terminal |
+| `om` / `om boot` | Adaptive bootstrap → agent launch |
+| `om tui` | Preview orchestrator TUI |
 | `om init` | Scaffold `.openmangos/` (profile, config) |
 | `om sense` | Probe workspace and print situation report |
 | `om suggest` | Show suggested mode + reasoning |

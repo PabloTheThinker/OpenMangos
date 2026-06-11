@@ -12,6 +12,7 @@ import { recordToAgentDrive } from '../integrations/agentdrive.js'
 import { pushSituationToVektra } from '../integrations/vektra-bridge.js'
 import { buildSituation } from '../core/situation.js'
 import type { BackendId, SituationGraph } from '../types.js'
+import { resolveLaunchPlan } from './launch.js'
 import { resolveVerificationSteps } from '../verify/registry.js'
 import { printVerificationReport, runVerification } from '../verify/runner.js'
 
@@ -126,4 +127,20 @@ export async function shouldVerifyOnExit(root: string, flag?: boolean): Promise<
   if (flag === false) return false
   const config = await loadConfig(root)
   return config.verify_on_exit === true
+}
+
+export async function wrapAndLaunch(
+  root: string,
+  backend: BackendId,
+  options: WrapOptions & { situation?: SituationGraph; extraArgs?: string[]; verifyFlag?: boolean } = {},
+): Promise<void> {
+  const situation = options.situation ?? (await buildSituation(root))
+  const { packPath, env } = await prepareWrapContext(root, situation, backend)
+  const plan = await resolveLaunchPlan(root, backend, situation, packPath)
+  for (const note of plan.notes) console.error(`OpenMangos → ${note}`)
+
+  const verifyOnExit = await shouldVerifyOnExit(root, options.verifyFlag)
+  if (verifyOnExit) console.error('verify-on-exit: enabled')
+
+  launchBackend(backend, env, root, [...plan.args, ...(options.extraArgs ?? [])], { verifyOnExit })
 }

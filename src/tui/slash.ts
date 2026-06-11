@@ -1,6 +1,6 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { launchBackend, prepareWrapContext, shouldVerifyOnExit } from '../adapters/wrap.js'
+import { wrapAndLaunch } from '../adapters/wrap.js'
 import { isBackendId } from '../core/backends.js'
 import { loadConfig } from '../core/config.js'
 import { buildMissionPlan, saveMissionPlan } from '../core/mission.js'
@@ -324,7 +324,5 @@ function formatSituationSummary(s: SituationGraph): string[] {
 }
 
 export async function launchFromTui(root: string, backend: BackendId, situation: SituationGraph): Promise<void> {
-  const { env } = await prepareWrapContext(root, situation, backend)
-  const verifyOnExit = await shouldVerifyOnExit(root)
-  launchBackend(backend, env, root, [], { verifyOnExit })
+  await wrapAndLaunch(root, backend, { situation })
 }

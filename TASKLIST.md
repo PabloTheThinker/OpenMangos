@@ -143,4 +143,9 @@ openmangos/
 
 ---
 
-*Updated: 2026-06-11 — v0.5.0 full-screen TUI (Factory/Codex/Claude patterns + situation strip)*
+| 3.11 | OpenCode adapter (opencode.json, plugin, launch args) | ✅ | v0.6.0 orchestration-first |
+| 3.12 | Bootstrap default `om` (not agent TUI clone) | ✅ | Hands off to OpenCode/Warp |
+| 3.13 | Grok Build-style full TUI | ⬜ | Phase 2 after orchestration tested |
+| 4.3 | Integration tests per probe | 🔄 | Unit tests for router/bootstrap/opencode |
+
+*Updated: 2026-06-11 — v0.6.0 orchestration-first; OpenCode adapter; bootstrap default*

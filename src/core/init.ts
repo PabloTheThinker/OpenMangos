@@ -1,5 +1,6 @@
 import { access, appendFile, readFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import { scaffoldOpenCodeIntegration } from '../adapters/opencode.js'
 import { DEFAULT_CONFIG, saveConfig } from './config.js'
 import { PROFILE_DIR, saveSituationProfile } from './profile.js'
 import { buildSituation } from './situation.js'
@@ -14,6 +15,7 @@ export interface InitResult {
   configPath: string
   gitignoreUpdated: boolean
   situationSaved: boolean
+  opencodeScaffold: string[]
 }
 
 async function ensureGitignore(root: string): Promise<boolean> {
@@ -40,12 +42,14 @@ export async function initWorkspace(root: string): Promise<InitResult> {
   const profilePath = await saveSituationProfile(root, situation)
   const configPath = await saveConfig(root, DEFAULT_CONFIG)
   const gitignoreUpdated = await ensureGitignore(root)
+  const opencodeScaffold = await scaffoldOpenCodeIntegration(root)
 
   return {
     profilePath,
     configPath,
     gitignoreUpdated,
     situationSaved: true,
+    opencodeScaffold,
   }
 }
 

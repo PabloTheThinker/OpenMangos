@@ -1,6 +1,6 @@
 {
   "name": "openmangos",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Adaptive terminal framework — senses your environment, adapts to the problem, orchestrates any AI backend",
   "type": "module",
   "bin": {
@@ -10,6 +10,7 @@
     "build": "tsup",
     "dev": "tsx src/cli.ts",
     "typecheck": "tsc --noEmit",
+    "test": "npm run build && node --import tsx --test src/test/*.test.ts",
     "prepublishOnly": "npm run build"
   },
   "keywords": [

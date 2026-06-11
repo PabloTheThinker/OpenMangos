@@ -31,19 +31,19 @@ export async function saveConfig(root: string, config: OpenMangosConfig): Promis
 export const DEFAULT_CONFIG: OpenMangosConfig = {
   constraints: [],
   backends: {
-    preferred: 'grok',
+    preferred: 'opencode',
     routing: {
-      research: 'grok',
+      research: 'opencode',
       refactor: 'claude',
       review: 'claude',
       ops: 'grok',
-      quick: 'codex',
+      quick: 'opencode',
     },
     roles: {
       orchestrator: 'claude',
-      implementer: 'grok',
+      implementer: 'opencode',
       validator: 'codex',
-      research: 'grok',
+      research: 'opencode',
     },
   },
   verify_on_exit: false,

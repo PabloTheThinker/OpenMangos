@@ -55,7 +55,10 @@ export function routeTask(
   }
 
   if (!situation.backends.available.includes(backend)) {
-    const fallback = situation.backends.available[0]
+    const ossChain: BackendId[] = ['opencode', 'codex', 'grok', 'claude', 'cursor']
+    const fallback =
+      ossChain.find((id) => situation.backends.available.includes(id)) ??
+      situation.backends.available[0]
     if (fallback) {
       reasons.push(`backend ${backend} not on PATH, fallback → ${fallback}`)
       backend = fallback

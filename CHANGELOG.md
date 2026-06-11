@@ -4,6 +4,34 @@ Notable changes to this project. Newest entries first.
 
 ---
 
+## 2026-06-11 — v0.6.0 orchestration-first (OpenCode + bootstrap)
+
+### Added
+
+- **Default `om`** → adaptive bootstrap (`sense` + `pack` + launch agent) instead of custom TUI
+- **`om boot`** — explicit bootstrap with `--task`, `--dry-run`, `--verify-on-exit`
+- **OpenCode adapter** — `opencode.json` sync, mode→`build`/`plan` agent, `-f context-pack.md`
+- **`om init`** scaffolds `.opencode/plugins/openmangos.ts` + `/sense` `/verify` commands
+- **`wrapAndLaunch`** — unified wrap path for run/wrap/handoff/TUI with backend launch plans
+- **Warp host detection** in `om doctor` (`WARP_IS_LOCAL_SHELL_SESSION`)
+- **Unit tests** — `npm test` (router, bootstrap, OpenCode adapter)
+
+### Changed
+
+- Default preferred backend → **opencode** (OSS-first fallback chain)
+- `om tui` retained as preview shell; full Grok Build-style TUI deferred until orchestration proven
+- Version 0.6.0
+
+### Verify
+
+```bash
+npm test
+om boot --dry-run
+om init && om run opencode
+```
+
+---
+
 ## 2026-06-11 — v0.5.0 full-screen terminal experience
 
 ### Added

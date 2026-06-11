@@ -3,7 +3,9 @@ import { join, resolve } from 'node:path'
 import type { Command } from 'commander'
 import YAML from 'yaml'
 import { BACKEND_ADAPTERS } from '../adapters/backends/index.js'
-import { launchBackend, prepareWrapContext, shouldVerifyOnExit } from '../adapters/wrap.js'
+import { wrapAndLaunch } from '../adapters/wrap.js'
+import { runBootstrap } from '../core/bootstrap.js'
+import { detectTerminalHost } from '../core/host.js'
 import { isBackendId } from '../core/backends.js'
 import { loadConfig } from '../core/config.js'
 import { initWorkspace } from '../core/init.js'
@@ -30,8 +32,27 @@ import { runCommand } from '../probes/util.js'
 
 export function registerCommands(program: Command): void {
   program
+    .command('boot [backend]')
+    .description('Adaptive bootstrap: sense + pack + launch agent (default when no args)')
+    .option('-C, --directory <path>', 'workspace root', process.cwd())
+    .option('--task <text>', 'route mode/backend from task before launch')
+    .option('--dry-run', 'show bootstrap plan without launching')
+    .option('--verify-on-exit', 'run om verify when backend exits')
+    .action(async (backendArg: string | undefined, opts: { directory: string; task?: string; dryRun?: boolean; verifyOnExit?: boolean }) => {
+      const root = resolve(opts.directory)
+      const backend = backendArg && isBackendId(backendArg) ? backendArg : undefined
+      await runBootstrap({
+        directory: root,
+        backend,
+        task: opts.task,
+        dryRun: opts.dryRun,
+        verifyOnExit: opts.verifyOnExit,
+      })
+    })
+
+  program
     .command('tui')
-    .description('Launch full-screen OpenMangos terminal (default when no args)')
+    .description('Preview OpenMangos TUI (orchestrator shell — full Grok-style TUI later)')
     .option('-C, --directory <path>', 'workspace root', process.cwd())
     .action(async (opts: { directory: string }) => {
       const { runTui } = await import('../tui/index.js')
@@ -172,7 +193,8 @@ export function registerCommands(program: Command): void {
       console.log(`  profile: ${result.profilePath}`)
       console.log(`  config:  ${result.configPath}`)
       if (result.gitignoreUpdated) console.log('  .gitignore updated')
-      console.log('\nNext: om sense · om run grok')
+      for (const p of result.opencodeScaffold) console.log(`  opencode: ${p}`)
+      console.log('\nNext: om · om sense · om run opencode')
     })
 
   program
@@ -188,6 +210,8 @@ export function registerCommands(program: Command): void {
       }
       const node = await runCommand('node', ['--version'], process.cwd(), 2000)
       console.log(node.ok ? `✓ node ${node.stdout}` : '✗ node missing')
+      const host = detectTerminalHost()
+      console.log(host.host === 'warp' ? '✓ Warp terminal host' : `○ host: ${host.host}`)
     })
 
   program
@@ -361,12 +385,11 @@ export function registerCommands(program: Command): void {
         backend = backendArg
       }
 
-      const { packPath, env } = await prepareWrapContext(root, situation, backend)
-      const verifyOnExit = await shouldVerifyOnExit(root, opts.noVerifyOnExit ? false : opts.verifyOnExit)
       console.error(`OpenMangos run → ${backend}`)
-      console.error(`context: ${packPath}`)
-      if (verifyOnExit) console.error('verify-on-exit: enabled')
-      launchBackend(backend, env, root, [], { verifyOnExit })
+      await wrapAndLaunch(root, backend, {
+        situation,
+        verifyFlag: opts.noVerifyOnExit ? false : opts.verifyOnExit,
+      })
     })
 
   program
@@ -383,12 +406,11 @@ export function registerCommands(program: Command): void {
         console.error('Unknown backend')
         process.exit(1)
       }
-      const { packPath, env } = await prepareWrapContext(root, situation, backendInput)
-      const verifyOnExit = await shouldVerifyOnExit(root, opts.noVerifyOnExit ? false : opts.verifyOnExit)
       console.error(`OpenMangos wrap → ${backendInput}`)
-      console.error(`context: ${packPath}`)
-      if (verifyOnExit) console.error('verify-on-exit: enabled')
-      launchBackend(backendInput, env, root, [], { verifyOnExit })
+      await wrapAndLaunch(root, backendInput, {
+        situation,
+        verifyFlag: opts.noVerifyOnExit ? false : opts.verifyOnExit,
+      })
     })
 
   program
@@ -405,11 +427,8 @@ export function registerCommands(program: Command): void {
       }
       const situation = await buildSituation(root)
       await handoffSession(root, situation.backends.preferred, opts.to, situation.mode, situation.workspace)
-      const { packPath, env } = await prepareWrapContext(root, situation, opts.to)
-      const verifyOnExit = await shouldVerifyOnExit(root, opts.verifyOnExit)
       console.error(`handoff → ${opts.to}`)
-      console.error(`context: ${packPath}`)
-      launchBackend(opts.to, env, root, [], { verifyOnExit })
+      await wrapAndLaunch(root, opts.to, { situation, verifyFlag: opts.verifyOnExit })
     })
 
   const sessionCmd = program.command('session').description('Session history')
