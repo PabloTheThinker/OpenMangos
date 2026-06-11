@@ -43,6 +43,8 @@ export async function syncOpenCodeConfig(
   merged.$schema = existing.$schema ?? 'https://opencode.ai/config.json'
   merged.instructions = instructions
   merged.default_agent = agent
+  // npm-installed OpenCode can hang on startup when autoupdate downloads; om handles upgrade hints via doctor.
+  merged.autoupdate = false
 
   await writeFile(configPath, JSON.stringify(merged, null, 2) + '\n', 'utf8')
   return { configPath, agent }

@@ -1,5 +1,6 @@
 import { readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import { loadMangosDriveManifest } from '../integrations/mangos-drive.js'
 import { PROFILE_DIR } from './profile.js'
 import type { SituationGraph } from '../types.js'
 
@@ -64,7 +65,10 @@ function suggestVerificationCommands(situation: SituationGraph): string[] {
   return [...new Set(commands)].slice(0, 6)
 }
 
-export function buildAgentsMdSection(situation: SituationGraph): string {
+export function buildAgentsMdSection(
+  situation: SituationGraph,
+  mangosDrive?: { displayName: string; driveId: string; workspaceSwarm: string; personalSwarm: string },
+): string {
   const stack = situation.stack.join(', ') || 'unknown'
   const infra = situation.infra.join(', ') || 'none detected'
   const verification = suggestVerificationCommands(situation)
@@ -80,6 +84,18 @@ export function buildAgentsMdSection(situation: SituationGraph): string {
     `- **Stack:** ${stack}`,
     `- **Infra:** ${infra}`,
     '',
+    ...(mangosDrive ?
+      [
+        '### Mangos Drive',
+        '',
+        `- **Drive:** ${mangosDrive.displayName} (\`${mangosDrive.driveId}\`)`,
+        `- **Workspace swarm:** \`${mangosDrive.workspaceSwarm}\``,
+        `- **Personal swarm:** \`${mangosDrive.personalSwarm}\``,
+        '',
+        'OpenMangos routes memory through this user-scoped drive; AgentDrive is the substrate underneath.',
+        '',
+      ]
+    : []),
     '### Verification commands',
     '',
     ...(
@@ -127,7 +143,18 @@ export async function syncAgentsMd(
   situation: SituationGraph,
 ): Promise<{ path: string; created: boolean; updated: boolean }> {
   const path = join(root, AGENTS_MD_FILE)
-  const section = buildAgentsMdSection(situation)
+  const manifest = await loadMangosDriveManifest(root)
+  const section = buildAgentsMdSection(
+    situation,
+    manifest ?
+      {
+        displayName: manifest.display_name,
+        driveId: manifest.drive_id,
+        workspaceSwarm: manifest.swarms.workspace,
+        personalSwarm: manifest.swarms.personal,
+      }
+    : undefined,
+  )
   const wrapped = wrapSection(section)
 
   let existing: string

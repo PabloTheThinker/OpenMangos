@@ -57,10 +57,12 @@ describe('OpenCode adapter', () => {
       const raw = JSON.parse(await readFile(configPath, 'utf8')) as {
         instructions: string[]
         default_agent: string
+        autoupdate: boolean
       }
       assert.ok(raw.instructions.includes('.openmangos/context-pack.md'))
       assert.ok(raw.instructions.includes('AGENTS.md'))
       assert.equal(raw.default_agent, 'plan')
+      assert.equal(raw.autoupdate, false)
     } finally {
       await rm(root, { recursive: true, force: true })
     }

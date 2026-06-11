@@ -1,13 +1,13 @@
 import { spawn } from 'node:child_process'
-import { mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { syncAgentsMd } from '../core/agents-md.js'
 import { getBackendSpec } from '../core/backends.js'
 import { loadConfig } from '../core/config.js'
+import { writeContextPackFiles } from '../core/context-pack.js'
 import { rememberSituation } from '../core/memory.js'
-import { situationToJson, situationToMarkdown } from '../core/pack.js'
 import { PROFILE_DIR, saveSituationProfile } from '../core/profile.js'
 import { startSession } from '../core/session.js'
+import { resolveAgentDriveSwarms } from '../integrations/agentdrive-swarm.js'
 import { recordToAgentDrive } from '../integrations/agentdrive.js'
 import { pushSituationToVektra } from '../integrations/vektra-bridge.js'
 import { buildSituation } from '../core/situation.js'
@@ -34,13 +34,23 @@ export async function prepareWrapContext(
   const agentsMd = await syncAgentsMd(root, situation)
   console.error(`OpenMangos → AGENTS.md: ${agentsMd.path}`)
 
-  const dir = join(root, PROFILE_DIR)
-  await mkdir(dir, { recursive: true })
-
-  const packMdPath = join(dir, 'context-pack.md')
-  const packJsonPath = join(dir, 'context-pack.json')
-  await writeFile(packMdPath, situationToMarkdown(situation), 'utf8')
-  await writeFile(packJsonPath, situationToJson(situation), 'utf8')
+  const { packMdPath, packJsonPath, memory: packMemory, swarmIds, provisionNotes } =
+    await writeContextPackFiles(root, situation, config)
+  for (const note of provisionNotes) console.error(`OpenMangos → Mangos Drive: ${note}`)
+  if (packMemory.mangos_drive) {
+    console.error(
+      `OpenMangos → Mangos Drive: ${packMemory.mangos_drive.display_name} (${packMemory.mangos_drive.drive_id})`,
+    )
+  }
+  if (packMemory.agentdrive && swarmIds) {
+    console.error(`OpenMangos → recall workspace swarm ${swarmIds.workspace}`)
+  }
+  if (packMemory.agentdrive_personal && swarmIds?.personal) {
+    console.error(`OpenMangos → recall personal swarm ${swarmIds.personal}`)
+  }
+  if (packMemory.local?.length) {
+    console.error(`OpenMangos → local recall: ${packMemory.local.length} snapshot(s) in context pack`)
+  }
 
   const profilePath = await saveSituationProfile(root, situation)
 
@@ -51,8 +61,18 @@ export async function prepareWrapContext(
   console.error(`OpenMangos → memory: ${memory.id}`)
 
   if (config.agentdrive?.enabled !== false && config.agentdrive?.auto_remember !== false) {
-    const ad = await recordToAgentDrive(root, situation, config.agentdrive ?? {})
-    if (ad.ok) console.error(`OpenMangos → AgentDrive: ${ad.message}`)
+    const swarms = await resolveAgentDriveSwarms(root, situation, config.agentdrive ?? {})
+    const ad = await recordToAgentDrive(
+      root,
+      situation,
+      config.agentdrive ?? {},
+      swarms.workspaceSwarmId,
+    )
+    if (ad.ok) {
+      console.error(
+        `OpenMangos → Mangos Drive record: ${swarms.workspaceSwarmId} (${ad.message})`,
+      )
+    }
   }
 
   if (config.vektra?.enabled !== false && config.vektra?.auto_push !== false) {

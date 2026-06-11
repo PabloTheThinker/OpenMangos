@@ -7,7 +7,7 @@ const program = new Command()
 program
   .name('om')
   .description('OpenMangos — adaptive terminal framework')
-  .version('0.6.2')
+  .version('0.10.3')
 
 registerCommands(program)
 
@@ -30,6 +30,7 @@ async function main(): Promise<void> {
       dryRun: args.includes('--dry-run'),
       pick: args.includes('--pick'),
       verifyOnExit: args.includes('--verify-on-exit'),
+      noHeal: args.includes('--no-heal'),
     })
     return
   }

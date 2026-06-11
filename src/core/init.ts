@@ -1,6 +1,7 @@
 import { access, appendFile, readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { scaffoldOpenCodeIntegration } from '../adapters/opencode.js'
+import { provisionMangosDrive } from '../integrations/mangos-drive.js'
 import { DEFAULT_CONFIG, saveConfig } from './config.js'
 import { PROFILE_DIR, saveSituationProfile } from './profile.js'
 import { buildSituation } from './situation.js'
@@ -16,6 +17,7 @@ export interface InitResult {
   gitignoreUpdated: boolean
   situationSaved: boolean
   opencodeScaffold: string[]
+  mangosDrive?: { driveId: string; displayName: string; created: boolean }
 }
 
 async function ensureGitignore(root: string): Promise<boolean> {
@@ -43,6 +45,7 @@ export async function initWorkspace(root: string): Promise<InitResult> {
   const configPath = await saveConfig(root, DEFAULT_CONFIG)
   const gitignoreUpdated = await ensureGitignore(root)
   const opencodeScaffold = await scaffoldOpenCodeIntegration(root)
+  const mangos = await provisionMangosDrive(root, situation, DEFAULT_CONFIG.agentdrive ?? {})
 
   return {
     profilePath,
@@ -50,6 +53,11 @@ export async function initWorkspace(root: string): Promise<InitResult> {
     gitignoreUpdated,
     situationSaved: true,
     opencodeScaffold,
+    mangosDrive: {
+      driveId: mangos.manifest.drive_id,
+      displayName: mangos.manifest.display_name,
+      created: mangos.created,
+    },
   }
 }
 

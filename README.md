@@ -4,19 +4,52 @@ Adaptive terminal framework for Vektra Industries. Senses your workspace, builds
 
 See [CONCEPT.md](./CONCEPT.md) for the full vision and competitive research.
 
-## Install (local dev)
+## Install
+
+### One-liner (recommended)
 
 ```bash
-cd "/home/pablothethinker/Vektra Industries/Software/OpenMangos"
-npm install
-npm run build
-npm link   # optional: global `om` command
+curl -fsSL https://vektraindustries.com/openmangos/install | bash
 ```
 
-Or run without linking:
+Clones to `~/.openmangos/src`, builds, links `om`, and runs onboarding.
+
+### Local dev install
+
+```bash
+cd "/path/to/OpenMangos"
+./install.sh
+# or
+./scripts/install.sh
+```
+
+### Manual install
+
+```bash
+npm install && npm run build && npm link
+om install --check          # prerequisite scan
+om onboard                  # interactive 6-step wizard
+```
+
+### First `om` launch
+
+On first run, `om` offers the onboarding wizard. Skip with Enter, or disable prompts:
+
+```bash
+OPENMANGOS_SKIP_ONBOARD=1 om
+```
+
+Non-interactive / CI:
+
+```bash
+om onboard --yes --install --with-opencode
+```
+
+### Dev without linking
 
 ```bash
 npm run dev -- sense
+npm run dev -- onboard --yes
 ```
 
 ## Architecture (phased)
@@ -64,7 +97,17 @@ Use `om sense`, `om run grok`, etc. for non-interactive CLI mode.
 |---|---|
 | `om` / `om boot` | Adaptive bootstrap → agent launch |
 | `om tui` | Preview orchestrator TUI |
-| `om init` | Scaffold `.openmangos/` (profile, config) |
+| `om update` | Rebuild + relink (or `npm install -g` when global) |
+| `om update --check` | Show current vs published version |
+| `om uninstall` | Remove `om` from PATH (prompts to keep or purge data) |
+| `om uninstall --purge` | Uninstall + remove all local data |
+| `om uninstall --keep-data` | Uninstall CLI only |
+| `om reset` | Clear local OM data + Mangos Drive swarms (fresh start) |
+| `om install` | Build, link, and check prerequisites |
+| `om onboard` | First-run setup wizard (workspace + Mangos Drive + backend) |
+| `om init` | Scaffold `.openmangos/` (profile, config, Mangos Drive) |
+| `om drive status` | Show your Mangos Drive manifest + swarms |
+| `om drive provision` | Create/repair Mangos Drive + swarm dirs |
 | `om sense` | Probe workspace and print situation report |
 | `om suggest` | Show suggested mode + reasoning |
 | `om mode [name]` | Show or set mode |
@@ -78,8 +121,8 @@ Use `om sense`, `om run grok`, etc. for non-interactive CLI mode.
 | `om session ls` | List recent sessions |
 | `om mission plan "goal"` | Generate phased mission plan |
 | `om doctor` | Check om + backends on PATH |
-| `om recall` | Local memory + AgentDrive context |
-| `om remember` | Persist situation snapshot |
+| `om recall` | Local memory + Mangos Drive (workspace + personal swarms) |
+| `om remember` | Persist situation to local memory + Mangos Drive workspace swarm |
 | `om roles` | Factory-style role → backend routing |
 | `om watch` | Live situation refresh |
 | `om bridge status/push` | Vektra engine WebSocket sync |
@@ -99,6 +142,37 @@ Use `om sense`, `om run grok`, etc. for non-interactive CLI mode.
 - **Vercel** — vercel.json, linked project
 - **Fly.io** — fly.toml, app + region
 - **Ports** — common dev ports via `ss`
+
+## Mangos Drive (user-scoped memory)
+
+When you use OpenMangos (not raw `agentdrive`), OM provisions a **named drive** for you:
+
+| Layer | Example | Role |
+|---|---|---|
+| **Drive** | `mangos-pablothethinker` · **Mangos Drive** | Your namespace |
+| **Workspace swarm** | `mangos-pablothethinker-<project>` | Project memory |
+| **Personal swarm** | `mangos-pablothethinker-personal` | Cross-project memory |
+
+Manifest: `.openmangos/mangos-drive.yaml` · substrate: `~/.agentdrive/swarms/`
+
+```bash
+om drive status          # manifest + swarm ids
+om drive provision       # create or repair
+om doctor                # includes Mangos Drive health
+om heal                  # auto-provisions if missing
+```
+
+**OpenMangos path:** `om` → Mangos Drive → workspace + personal swarms → AgentDrive Experience Graph.
+
+**AgentDrive direct:** `agentdrive experience … --swarm-id <id>` — same substrate, no Mangos namespace. Set `agentdrive.swarm_id` in config to use a legacy swarm.
+
+Config (`.openmangos/config.yaml`):
+
+| Key | Default |
+|---|---|
+| `agentdrive.auto_provision` | `true` |
+| `agentdrive.mangos_display_name` | `Mangos Drive` |
+| `agentdrive.recall_personal` | `true` |
 
 ## AGENTS.md hook
 

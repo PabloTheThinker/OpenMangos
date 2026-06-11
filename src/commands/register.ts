@@ -5,7 +5,7 @@ import YAML from 'yaml'
 import { BACKEND_ADAPTERS } from '../adapters/backends/index.js'
 import { wrapAndLaunch } from '../adapters/wrap.js'
 import { runBootstrap } from '../core/bootstrap.js'
-import { detectTerminalHost } from '../core/host.js'
+import { runDoctor } from '../core/doctor.js'
 import { isBackendId } from '../core/backends.js'
 import { loadConfig } from '../core/config.js'
 import { initWorkspace } from '../core/init.js'
@@ -15,9 +15,15 @@ import { recallLocal, rememberSituation } from '../core/memory.js'
 import { resolveRoleBackends } from '../core/roles.js'
 import { startWatch } from '../core/watch.js'
 import { fetchAgentDriveContextPack, recordToAgentDrive } from '../integrations/agentdrive.js'
+import { resolveAgentDriveSwarms } from '../integrations/agentdrive-swarm.js'
 import { probeVektraBridge, pushSituationToVektra } from '../integrations/vektra-bridge.js'
 import { isMode, MODES } from '../core/modes.js'
-import { situationToJson, situationToMarkdown } from '../core/pack.js'
+import {
+  buildContextPackJson,
+  buildContextPackMarkdown,
+  gatherContextPackMemory,
+  writeContextPackFiles,
+} from '../core/context-pack.js'
 import { loadProfile, saveProfile } from '../core/profile.js'
 import { routeTask } from '../core/router.js'
 import { handoffSession, listSessions, getSession } from '../core/session.js'
@@ -28,9 +34,17 @@ import { printSituationReport } from '../ui/report.js'
 import type { BackendId, Mode } from '../types.js'
 import { resolveVerificationSteps } from '../verify/registry.js'
 import { printVerificationReport, runVerification } from '../verify/runner.js'
-import { runCommand } from '../probes/util.js'
+import { registerDriveCommands } from './drive.js'
+import { registerInstallCommands } from './install.js'
+import { registerResetCommand } from './reset.js'
+import { registerLifecycleCommands } from './lifecycle.js'
+
 
 export function registerCommands(program: Command): void {
+  registerDriveCommands(program)
+  registerInstallCommands(program)
+  registerLifecycleCommands(program)
+  registerResetCommand(program)
   program
     .command('boot [backend]')
     .description('Adaptive bootstrap: sense + pack + launch agent (default when no args)')
@@ -40,7 +54,8 @@ export function registerCommands(program: Command): void {
     .option('--pick', 'always show backend picker when multiple installed')
     .option('-y, --yes', 'skip picker; use OSS-first / preferred default')
     .option('--verify-on-exit', 'run om verify when backend exits')
-    .action(async (backendArg: string | undefined, opts: { directory: string; task?: string; dryRun?: boolean; pick?: boolean; yes?: boolean; verifyOnExit?: boolean }) => {
+    .option('--no-heal', 'skip pre-bootstrap auto-heal')
+    .action(async (backendArg: string | undefined, opts: { directory: string; task?: string; dryRun?: boolean; pick?: boolean; yes?: boolean; verifyOnExit?: boolean; noHeal?: boolean }) => {
       const root = resolve(opts.directory)
       const backend = backendArg && isBackendId(backendArg) ? backendArg : undefined
       await runBootstrap({
@@ -51,6 +66,7 @@ export function registerCommands(program: Command): void {
         pick: opts.pick,
         yes: opts.yes,
         verifyOnExit: opts.verifyOnExit,
+        noHeal: opts.noHeal,
       })
     })
 
@@ -169,15 +185,27 @@ export function registerCommands(program: Command): void {
     .action(async (opts: { directory: string; json?: boolean; write?: boolean }) => {
       const root = resolve(opts.directory)
       const situation = await buildSituation(root)
+      const config = await loadConfig(root)
       if (opts.write) {
-        const dir = join(root, '.openmangos')
-        await mkdir(dir, { recursive: true })
-        await writeFile(join(dir, 'context-pack.md'), situationToMarkdown(situation), 'utf8')
-        await writeFile(join(dir, 'context-pack.json'), situationToJson(situation), 'utf8')
-        console.log(`Wrote ${dir}/context-pack.{md,json}`)
+        const { packMdPath, memory } = await writeContextPackFiles(root, situation, config)
+        console.log(`Wrote ${packMdPath.replace(/\.md$/, '')}.{md,json}`)
+        if (memory.mangos_drive) {
+          console.log(`  Mangos Drive: ${memory.mangos_drive.display_name} (${memory.mangos_drive.drive_id})`)
+        }
+        if (memory.agentdrive) {
+          console.log(`  workspace swarm: ${memory.agentdrive.swarmId ?? 'default'}`)
+        }
+        if (memory.agentdrive_personal) {
+          console.log(`  personal swarm: ${memory.agentdrive_personal.swarmId ?? 'default'}`)
+        }
         return
       }
-      console.log(opts.json ? situationToJson(situation) : situationToMarkdown(situation))
+      const memory = await gatherContextPackMemory(root, situation, config)
+      console.log(
+        opts.json ?
+          buildContextPackJson(situation, memory)
+        : buildContextPackMarkdown(situation, memory),
+      )
     })
 
   program
@@ -233,24 +261,46 @@ export function registerCommands(program: Command): void {
       console.log(`  config:  ${result.configPath}`)
       if (result.gitignoreUpdated) console.log('  .gitignore updated')
       for (const p of result.opencodeScaffold) console.log(`  opencode: ${p}`)
+      if (result.mangosDrive) {
+        const tag = result.mangosDrive.created ? 'created' : 'ready'
+        console.log(`  mangos drive: ${result.mangosDrive.displayName} (${result.mangosDrive.driveId}) — ${tag}`)
+      }
       console.log('\nNext: om · om sense · om run opencode')
     })
 
   program
     .command('doctor')
-    .description('Check OpenMangos and backend health')
-    .action(async () => {
-      const om = await runCommand('which', ['om'], process.cwd(), 2000)
-      console.log(om.ok ? '✓ om on PATH' : '✗ om not on PATH (npm link?)')
-      for (const backend of ['grok', 'claude', 'opencode', 'codex', 'agent'] as const) {
-        const found = await runCommand('which', [backend], process.cwd(), 2000)
-        const label = backend === 'agent' ? 'cursor (agent)' : backend
-        console.log(found.ok ? `✓ ${label}` : `○ ${label} (not installed)`)
+    .description('Diagnose OpenMangos and backend health')
+    .option('--fix', 'Heal fixable issues (upgrade backends, sync config)')
+    .option('--json', 'JSON report')
+    .option('-C, --directory <path>', 'workspace root', process.cwd())
+    .action(async (opts: { fix?: boolean; json?: boolean; directory: string }) => {
+      const root = resolve(opts.directory)
+      const report = await runDoctor(root, { fix: opts.fix })
+      if (opts.json) {
+        console.log(JSON.stringify(report, null, 2))
+        return
       }
-      const node = await runCommand('node', ['--version'], process.cwd(), 2000)
-      console.log(node.ok ? `✓ node ${node.stdout}` : '✗ node missing')
-      const host = detectTerminalHost()
-      console.log(host.host === 'warp' ? '✓ Warp terminal host' : `○ host: ${host.host}`)
+      for (const line of report.lines) console.log(line)
+      if (opts.fix && report.healed.length) {
+        console.log(report.healthy ? '\n✓ healed' : '\n⚠ healed with remaining issues')
+      }
+    })
+
+  program
+    .command('heal')
+    .description('Heal fixable OpenMangos and backend issues (alias for om doctor --fix)')
+    .option('--json', 'JSON report')
+    .option('-C, --directory <path>', 'workspace root', process.cwd())
+    .action(async (opts: { json?: boolean; directory: string }) => {
+      const root = resolve(opts.directory)
+      const report = await runDoctor(root, { fix: true })
+      if (opts.json) {
+        console.log(JSON.stringify(report, null, 2))
+        return
+      }
+      for (const line of report.lines) console.log(line)
+      console.log(report.healthy ? '\n✓ healed' : '\n⚠ healed with remaining issues')
     })
 
   program
@@ -283,6 +333,7 @@ export function registerCommands(program: Command): void {
     .option('-n, --limit <n>', 'local snapshot limit', '8')
     .action(async (opts: { directory: string; local?: boolean; agentdrive?: boolean; json?: boolean; limit: string }) => {
       const root = resolve(opts.directory)
+      const situation = await buildSituation(root)
       const config = await loadConfig(root)
       const output: Record<string, unknown> = {}
 
@@ -290,7 +341,20 @@ export function registerCommands(program: Command): void {
         output.local = await recallLocal(root, Number(opts.limit))
       }
       if (!opts.local) {
-        output.agentdrive = await fetchAgentDriveContextPack(config.agentdrive ?? {})
+        const swarms = await resolveAgentDriveSwarms(root, situation, config.agentdrive ?? {})
+        output.mangos_drive = swarms.displayName
+        output.workspace_swarm = swarms.workspaceSwarmId
+        output.personal_swarm = swarms.personalSwarmId
+        output.agentdrive = await fetchAgentDriveContextPack(
+          config.agentdrive ?? {},
+          swarms.workspaceSwarmId,
+        )
+        if (config.agentdrive?.recall_personal !== false && swarms.personalSwarmId) {
+          output.agentdrive_personal = await fetchAgentDriveContextPack(
+            config.agentdrive ?? {},
+            swarms.personalSwarmId,
+          )
+        }
       }
 
       if (opts.json) {
@@ -304,12 +368,24 @@ export function registerCommands(program: Command): void {
           console.log(`  ${m.id}  ${m.recordedAt}  ${m.summary}`)
         }
       }
+      if (output.mangos_drive) {
+        console.log(`\nMangos Drive: ${output.mangos_drive}`)
+        console.log(`  workspace swarm: ${output.workspace_swarm}`)
+        if (output.personal_swarm) console.log(`  personal swarm: ${output.personal_swarm}`)
+      }
       const ad = output.agentdrive as { ok: boolean; text: string; source: string } | undefined
       if (ad?.ok && ad.text) {
-        console.log('\n## AgentDrive Experience Graph\n')
+        console.log('\n## Workspace memory (Mangos Drive)\n')
         console.log(ad.text.slice(0, 3000))
       } else if (ad && !opts.local) {
         console.log(`\nAgentDrive: ${ad.source}`)
+      }
+      const adPersonal = output.agentdrive_personal as
+        | { ok: boolean; text: string; source: string }
+        | undefined
+      if (adPersonal?.ok && adPersonal.text) {
+        console.log('\n## Personal memory (Mangos Drive)\n')
+        console.log(adPersonal.text.slice(0, 2000))
       }
     })
 
@@ -323,8 +399,21 @@ export function registerCommands(program: Command): void {
       const config = await loadConfig(root)
       const snap = await rememberSituation(root, situation)
       console.log(`local memory: ${snap.id}`)
-      const ad = await recordToAgentDrive(root, situation, config.agentdrive ?? {})
-      console.log(ad.ok ? `agentdrive: ${ad.message}` : `agentdrive: ${ad.message}`)
+      const swarms = await resolveAgentDriveSwarms(root, situation, config.agentdrive ?? {})
+      if (swarms.displayName) {
+        console.log(`mangos drive: ${swarms.displayName} (${swarms.driveId ?? 'unknown'})`)
+      }
+      const ad = await recordToAgentDrive(
+        root,
+        situation,
+        config.agentdrive ?? {},
+        swarms.workspaceSwarmId,
+      )
+      console.log(
+        ad.ok ?
+          `agentdrive: ${ad.message} → swarm ${swarms.workspaceSwarmId}`
+        : `agentdrive: ${ad.message}`,
+      )
     })
 
   program

@@ -29,6 +29,7 @@ export async function saveConfig(root: string, config: OpenMangosConfig): Promis
 }
 
 export const DEFAULT_CONFIG: OpenMangosConfig = {
+  auto_heal: true,
   constraints: [],
   backends: {
     preferred: 'opencode',
@@ -50,7 +51,10 @@ export const DEFAULT_CONFIG: OpenMangosConfig = {
   agentdrive: {
     enabled: true,
     auto_remember: true,
-    swarm_id: 'stabilization-wave-20260531',
+    auto_recall: true,
+    auto_provision: true,
+    recall_personal: true,
+    mangos_display_name: 'Mangos Drive',
   },
   vektra: {
     enabled: true,

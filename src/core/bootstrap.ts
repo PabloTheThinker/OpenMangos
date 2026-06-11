@@ -11,6 +11,8 @@ import { loadProfile, saveProfile } from './profile.js'
 import { buildSituation } from './situation.js'
 import type { BackendId, SituationGraph } from '../types.js'
 import { isBackendId } from './backends.js'
+import { OSS_FIRST } from './heal/constants.js'
+import { runQuickHeal, shouldAutoHeal } from './heal/index.js'
 
 export interface BootstrapOptions {
   directory: string
@@ -20,6 +22,7 @@ export interface BootstrapOptions {
   dryRun?: boolean
   yes?: boolean
   pick?: boolean
+  noHeal?: boolean
 }
 
 export interface BootstrapResult {
@@ -27,8 +30,6 @@ export interface BootstrapResult {
   backend: BackendId
   notes: string[]
 }
-
-const OSS_FIRST: BackendId[] = ['opencode', 'codex', 'grok', 'claude', 'cursor']
 
 export function resolveBootstrapBackend(
   situation: SituationGraph,
@@ -84,7 +85,26 @@ export async function resolveBootstrapBackendInteractive(
 
 export async function runBootstrap(options: BootstrapOptions): Promise<BootstrapResult> {
   const root = options.directory
+
+  if (!options.dryRun && !options.backend && !options.yes) {
+    const { maybePromptOnboarding } = await import('./onboarding/wizard.js')
+    const onboarded = await maybePromptOnboarding(root)
+    if (onboarded) {
+      console.error(pc.dim('Onboarding done — continuing to bootstrap…\n'))
+    }
+  }
+
   const config = await loadConfig(root)
+  const autoHeal = !options.noHeal && config.auto_heal !== false && shouldAutoHeal(root)
+
+  if (autoHeal && !options.dryRun) {
+    const healed = await runQuickHeal(root, options.backend)
+    if (healed.length) {
+      console.error(pc.dim(healed.map((h) => `↻ ${h}`).join('\n')))
+      console.error('')
+    }
+  }
+
   let situation = await buildSituation(root)
 
   if (options.task) {
@@ -105,14 +125,15 @@ export async function runBootstrap(options: BootstrapOptions): Promise<Bootstrap
   printBootstrapBanner(situation, backend, host.host)
 
   if (options.dryRun) {
-    const { mkdir, writeFile } = await import('node:fs/promises')
-    const { join } = await import('node:path')
-    const { situationToMarkdown } = await import('./pack.js')
-    const { PROFILE_DIR } = await import('./profile.js')
-    const dir = join(root, PROFILE_DIR)
-    await mkdir(dir, { recursive: true })
-    const packPath = join(dir, 'context-pack.md')
-    await writeFile(packPath, situationToMarkdown(situation), 'utf8')
+    const { writeContextPackFiles } = await import('./context-pack.js')
+    const { packMdPath: packPath, memory: packMemory } = await writeContextPackFiles(
+      root,
+      situation,
+      config,
+    )
+    if (packMemory.agentdrive) {
+      console.error(pc.dim('AgentDrive recall: merged into context pack'))
+    }
     const { resolveLaunchPlan } = await import('../adapters/launch.js')
     const plan = await resolveLaunchPlan(root, backend, situation, packPath)
     notes.push(`dry-run: would launch ${backend} ${plan.args.join(' ')}`.trim())

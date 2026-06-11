@@ -31,7 +31,8 @@ export async function resolveAgentDriveBin(config: AgentDriveConfig = {}): Promi
 
 export async function fetchAgentDriveContextPack(
   config: AgentDriveConfig = {},
-): Promise<{ ok: boolean; text: string; source: string }> {
+  swarmId?: string,
+): Promise<{ ok: boolean; text: string; source: string; swarmId?: string }> {
   if (config.enabled === false) {
     return { ok: false, text: '', source: 'disabled' }
   }
@@ -42,7 +43,8 @@ export async function fetchAgentDriveContextPack(
   }
 
   const args = ['experience', 'context-pack', '--json']
-  if (config.swarm_id) args.push('--swarm-id', config.swarm_id)
+  const targetSwarm = swarmId ?? config.swarm_id
+  if (targetSwarm) args.push('--swarm-id', targetSwarm)
 
   const result = await runCommand(bin, args, process.cwd(), 15000)
   if (!result.ok) {
@@ -61,9 +63,9 @@ export async function fetchAgentDriveContextPack(
         (pack as Record<string, string>).narrative ??
         (pack as Record<string, string>).text
       : null) ?? result.stdout
-    return { ok: true, text, source: 'agentdrive' }
+    return { ok: true, text, source: 'agentdrive', swarmId: targetSwarm }
   } catch {
-    return { ok: true, text: result.stdout, source: 'agentdrive_raw' }
+    return { ok: true, text: result.stdout, source: 'agentdrive_raw', swarmId: targetSwarm }
   }
 }
 
@@ -71,6 +73,7 @@ export async function recordToAgentDrive(
   root: string,
   situation: SituationGraph,
   config: AgentDriveConfig = {},
+  swarmId?: string,
 ): Promise<{ ok: boolean; message: string }> {
   if (config.enabled === false) {
     return { ok: false, message: 'AgentDrive disabled in config' }
@@ -83,7 +86,8 @@ export async function recordToAgentDrive(
 
   const summary = `OpenMangos ${situation.workspace}: mode=${situation.mode} stack=${situation.stack.join(',')} @ ${situation.root}`
   const args = ['experience', 'record', '--summary', summary, '--json']
-  if (config.swarm_id) args.push('--swarm-id', config.swarm_id)
+  const targetSwarm = swarmId ?? config.swarm_id
+  if (targetSwarm) args.push('--swarm-id', targetSwarm)
 
   const reasoningFile = join(root, '.openmangos', 'context-pack.json')
   try {

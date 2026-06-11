@@ -4,5 +4,6 @@
     ".openmangos/context-pack.md",
     "AGENTS.md"
   ],
-  "default_agent": "plan"
+  "default_agent": "plan",
+  "autoupdate": false
 }

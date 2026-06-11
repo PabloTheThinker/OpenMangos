@@ -55,11 +55,50 @@ export interface UserProfile {
   notes?: string
 }
 
+export interface MangosDriveManifest {
+  drive_id: string
+  display_name: string
+  owner: string
+  created_at: string
+  swarms: {
+    personal: string
+    workspace: string
+  }
+  agentdrive_home?: string
+}
+
 export interface AgentDriveConfig {
   enabled?: boolean
   bin?: string
   swarm_id?: string
+  /** Record situation to Experience Graph on wrap (default: true). */
   auto_remember?: boolean
+  /** Merge AgentDrive context-pack into bootstrap context (default: true). */
+  auto_recall?: boolean
+  /** Provision a user-scoped Mangos Drive namespace in AgentDrive (default: true). */
+  auto_provision?: boolean
+  /** Display name for the user's Mangos Drive (default: "Mangos Drive"). */
+  mangos_display_name?: string
+  /** Recall personal swarm context in addition to workspace swarm. */
+  recall_personal?: boolean
+}
+
+export interface AgentDriveContextSummary {
+  swarmId?: string
+  fabricCoherence?: number
+  lookbackDays?: number
+  reasoningStyle?: string
+  compactSummary?: string
+  recommendations?: string[]
+  weakClusters?: Array<{ cycleId: string; whyActionable?: string; coherence?: number }>
+  source: string
+}
+
+export interface ContextPackMemory {
+  mangos_drive?: MangosDriveManifest
+  agentdrive?: AgentDriveContextSummary
+  agentdrive_personal?: AgentDriveContextSummary
+  local?: MemorySnapshot[]
 }
 
 export interface VektraBridgeConfig {
@@ -68,6 +107,8 @@ export interface VektraBridgeConfig {
 }
 
 export interface OpenMangosConfig {
+  /** Run quick heal before bootstrap launch (default: true). Set false or OPENMANGOS_NO_HEAL=1 to skip. */
+  auto_heal?: boolean
   constraints?: string[]
   backends?: {
     preferred?: BackendId

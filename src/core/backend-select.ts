@@ -1,6 +1,6 @@
-import { createInterface } from 'node:readline'
-import { stdin as input, stdout as output } from 'node:process'
 import pc from 'picocolors'
+import { stdin as input } from 'node:process'
+import { promptLine } from '../ui/prompt.js'
 import { BACKEND_ADAPTERS } from '../adapters/backends/index.js'
 import type { BackendId } from '../types.js'
 
@@ -58,18 +58,6 @@ export async function pickBackendInteractive(
   const picked = sorted[num - 1]!
   if (options.remember) await options.remember(picked)
   return picked
-}
-
-function promptLine(question: string): Promise<string> {
-  if (!input.isTTY) return Promise.resolve('')
-
-  const rl = createInterface({ input, output, terminal: true })
-  return new Promise((resolve) => {
-    rl.question(question, (answer) => {
-      rl.close()
-      resolve(answer)
-    })
-  })
 }
 
 export function shouldShowBackendPicker(options: {

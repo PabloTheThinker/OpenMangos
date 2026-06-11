@@ -7,13 +7,13 @@ import { buildMissionPlan, saveMissionPlan } from '../core/mission.js'
 import { runMissionPhases } from '../core/mission-runner.js'
 import { recallLocal } from '../core/memory.js'
 import { isMode, MODES } from '../core/modes.js'
-import { situationToJson, situationToMarkdown } from '../core/pack.js'
+import { writeContextPackFiles } from '../core/context-pack.js'
 import { loadProfile, saveProfile } from '../core/profile.js'
 import { routeTask } from '../core/router.js'
 import { listSessions } from '../core/session.js'
 import { buildSituation } from '../core/situation.js'
 import { resolveTools } from '../core/tools.js'
-import { runCommand } from '../probes/util.js'
+import { runDoctor } from '../core/doctor.js'
 import { resolveVerificationSteps } from '../verify/registry.js'
 import { runVerification } from '../verify/runner.js'
 import type { BackendId, Mode, SituationGraph } from '../types.js'
@@ -87,7 +87,10 @@ export async function handleSlash(input: string, ctx: SlashContext): Promise<Sla
       return await cmdRecall(ctx)
 
     case 'doctor':
-      return await cmdDoctor()
+      return await cmdDoctor(argText)
+
+    case 'heal':
+      return await cmdDoctor('fix')
 
     case 'backend':
       return cmdBackend(ctx, argText)
@@ -225,11 +228,13 @@ async function cmdVerify(ctx: SlashContext): Promise<SlashResult> {
 }
 
 async function cmdPack(ctx: SlashContext): Promise<SlashResult> {
-  const dir = join(ctx.root, '.openmangos')
-  await mkdir(dir, { recursive: true })
-  await writeFile(join(dir, 'context-pack.md'), situationToMarkdown(ctx.situation), 'utf8')
-  await writeFile(join(dir, 'context-pack.json'), situationToJson(ctx.situation), 'utf8')
-  return { type: 'lines', lines: [theme.ok(`Wrote ${dir}/context-pack.{md,json}`)] }
+  const config = await loadConfig(ctx.root)
+  const { packMdPath, memory } = await writeContextPackFiles(ctx.root, ctx.situation, config)
+  const lines = [theme.ok(`Wrote ${packMdPath.replace(/\.md$/, '')}.{md,json}`)]
+  if (memory.agentdrive) {
+    lines.push(theme.dim(`  AgentDrive recall: ${memory.agentdrive.swarmId ?? 'default'}`))
+  }
+  return { type: 'lines', lines }
 }
 
 async function cmdMission(ctx: SlashContext, rest: string[]): Promise<SlashResult> {
@@ -284,14 +289,19 @@ async function cmdRecall(ctx: SlashContext): Promise<SlashResult> {
   }
 }
 
-async function cmdDoctor(): Promise<SlashResult> {
-  const lines: string[] = [theme.bold('Doctor')]
-  const om = await runCommand('which', ['om'], process.cwd(), 2000)
-  lines.push(om.ok ? theme.ok('  ✓ om on PATH') : theme.fail('  ✗ om not on PATH'))
-  for (const backend of ['grok', 'claude', 'opencode', 'codex', 'agent'] as const) {
-    const found = await runCommand('which', [backend], process.cwd(), 2000)
-    const label = backend === 'agent' ? 'cursor' : backend
-    lines.push(found.ok ? theme.ok(`  ✓ ${label}`) : theme.dim(`  ○ ${label}`))
+async function cmdDoctor(args = ''): Promise<SlashResult> {
+  const fix = args.trim() === 'fix' || args.trim() === '--fix'
+  const report = await runDoctor(process.cwd(), { fix })
+  const title = fix ? 'Heal' : 'Doctor'
+  const lines: string[] = [theme.bold(title)]
+  for (const line of report.lines) {
+    const text = `  ${line}`
+    if (line.startsWith('✓') || line.startsWith('↻')) lines.push(theme.ok(text))
+    else if (line.startsWith('✗') || line.startsWith('⚠') || line.startsWith('🩹')) lines.push(theme.fail(text))
+    else lines.push(theme.dim(text))
+  }
+  if (fix) {
+    lines.push(report.healthy ? theme.ok('  ✓ healed') : theme.fail('  ⚠ remaining issues'))
   }
   return { type: 'lines', lines }
 }

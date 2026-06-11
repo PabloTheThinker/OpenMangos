@@ -201,7 +201,7 @@ export function helpContent(): string[] {
     theme.slash('/mission') + '    plan <goal> | show | run',
     theme.slash('/sessions') + '   Recent session log',
     theme.slash('/recall') + '     Cross-session memory',
-    theme.slash('/doctor') + '     Backend health check',
+    theme.slash('/doctor') + '     Diagnose backends · /heal to fix',
     theme.slash('/clear') + '      Clear transcript',
     theme.slash('/help') + '       This panel',
     '',
