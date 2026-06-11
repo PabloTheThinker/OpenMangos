@@ -4,6 +4,32 @@ Notable changes to this project. Newest entries first.
 
 ---
 
+## 2026-06-11 — Phase 1 (agent swarm)
+
+### Added
+
+- `om verify` — stack-aware verification (`npm test`, `tsc`, `pytest`, `cargo test`, `terraform validate`, `docker compose ps`, `git status`)
+- `om verify --dry-run` and `--json` output modes
+- AGENTS.md hook on `om wrap` — managed OpenMangos section with mode, stack, verification hints
+- Probes: **Rust** (Cargo.toml), **Kubernetes** (manifests, Helm), **Vercel**, **Fly.io**
+- Git repository initialized (`5656fd6` initial, Phase 1 follow-up commit)
+
+### Changed
+
+- Version `0.2.0`
+- README expanded with verify, new probes, AGENTS.md hook
+
+### Verify
+
+```bash
+npm run build
+om verify --dry-run
+om verify
+om wrap grok   # syncs AGENTS.md + launches backend
+```
+
+---
+
 ## 2026-06-11 — Phase 0 spike
 
 ### Added

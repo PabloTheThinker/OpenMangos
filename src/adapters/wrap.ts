@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
+import { syncAgentsMd } from '../core/agents-md.js'
 import { getBackendSpec } from '../core/backends.js'
 import { situationToJson, situationToMarkdown } from '../core/pack.js'
 import { PROFILE_DIR, saveSituationProfile } from '../core/profile.js'
@@ -11,6 +12,9 @@ export async function prepareWrapContext(root: string, situation: SituationGraph
   profilePath: string
   env: NodeJS.ProcessEnv
 }> {
+  const agentsMd = await syncAgentsMd(root, situation)
+  console.error(`OpenMangos → AGENTS.md: ${agentsMd.path}`)
+
   const dir = join(root, PROFILE_DIR)
   await mkdir(dir, { recursive: true })
 

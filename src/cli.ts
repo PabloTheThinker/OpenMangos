@@ -9,13 +9,15 @@ import { loadProfile, saveProfile } from './core/profile.js'
 import { buildSituation } from './core/situation.js'
 import { printSituationReport } from './ui/report.js'
 import type { BackendId, Mode } from './types.js'
+import { resolveVerificationSteps } from './verify/registry.js'
+import { printVerificationReport, runVerification } from './verify/runner.js'
 
 const program = new Command()
 
 program
   .name('om')
   .description('OpenMangos — adaptive terminal framework')
-  .version('0.1.0')
+  .version('0.2.0')
 
 program
   .command('sense')
@@ -106,6 +108,49 @@ program
 
     console.log(opts.json ? situationToJson(situation) : situationToMarkdown(situation))
   })
+
+program
+  .command('verify')
+  .description('Run stack-appropriate post-action verification checks')
+  .option('-C, --directory <path>', 'workspace root', process.cwd())
+  .option('--json', 'output JSON instead of human-readable report')
+  .option('--dry-run', 'list verification steps without running them')
+  .action(
+    async (opts: { directory: string; json?: boolean; dryRun?: boolean }) => {
+      const root = resolve(opts.directory)
+      const situation = await buildSituation(root)
+      const steps = await resolveVerificationSteps(situation, root)
+
+      if (opts.dryRun) {
+        if (opts.json) {
+          console.log(JSON.stringify({ root, steps }, null, 2))
+          return
+        }
+
+        console.log('')
+        console.log('Verification steps (dry run):')
+        if (steps.length === 0) {
+          console.log('  (none)')
+        } else {
+          for (const step of steps) {
+            console.log(`  • [${step.category}] ${step.label} — ${step.command} ${step.args.join(' ')}`)
+          }
+        }
+        console.log('')
+        return
+      }
+
+      const result = await runVerification(root, steps)
+
+      if (opts.json) {
+        console.log(JSON.stringify(result, null, 2))
+      } else {
+        printVerificationReport(result)
+      }
+
+      if (!result.ok) process.exit(1)
+    },
+  )
 
 program
   .command('wrap [backend]')

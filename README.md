@@ -19,7 +19,7 @@ Or run without linking:
 npm run dev -- sense
 ```
 
-## Commands (Phase 0)
+## Commands
 
 | Command | Description |
 |---|---|
@@ -31,16 +31,26 @@ npm run dev -- sense
 | `om mode --suggest` | Show suggested mode |
 | `om pack` | Print Markdown context pack |
 | `om pack --write` | Write `.openmangos/context-pack.{md,json}` |
-| `om wrap grok` | Launch backend with `OPENMANGOS_*` env injected |
+| `om verify` | Run stack-appropriate verification checks |
+| `om verify --dry-run` | List checks without running |
+| `om wrap grok` | Launch backend with context + AGENTS.md sync |
 
-## Probes (v0.1)
+## Probes
 
 - **Git** — branch, dirty files, last commit
 - **Node** — package.json, TypeScript, frameworks, test runner
 - **Python** — pyproject/requirements, pytest, venv
+- **Rust** — Cargo.toml, edition, binaries
 - **Docker** — compose, Dockerfile, running containers
+- **Kubernetes** — manifests, Helm charts
 - **Terraform** — `.tf` files, CLI availability
+- **Vercel** — vercel.json, linked project
+- **Fly.io** — fly.toml, app + region
 - **Ports** — common dev ports via `ss`
+
+## AGENTS.md hook
+
+`om wrap` syncs a managed `<!-- OPENMANGOS:START -->` … `<!-- OPENMANGOS:END -->` section into `AGENTS.md` with mode, stack, verification commands, and env var reference. Content outside the markers is preserved.
 
 ## Environment variables (`om wrap`)
 
