@@ -4,6 +4,24 @@ Notable changes to this project. Newest entries first.
 
 ---
 
+## 2026-06-11 — Full smoke test + AgentDrive install fix
+
+### Added
+
+- **`scripts/smoke-test.sh`** — end-to-end: tests, reset, onboard, doctor, drive, sense, pack, curl URLs
+
+### Fixed
+
+- **AgentDrive piped install** — vektra route now proxies canonical `install.sh` (not `scripts/install.sh` wrapper); `installAgentDrive()` falls back to raw GitHub if vektra serves wrapper
+
+### Verify
+
+```bash
+bash scripts/smoke-test.sh   # SMOKE_PASS
+```
+
+---
+
 ## 2026-06-11 — AgentDrive optional install during setup
 
 ### Added

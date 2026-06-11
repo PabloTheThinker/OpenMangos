@@ -6,6 +6,10 @@ import { runCommand } from '../../probes/util.js'
 export const AGENTDRIVE_INSTALL_URL =
   process.env.AGENTDRIVE_INSTALL_URL ?? 'https://vektraindustries.com/agentdrive/install'
 
+/** Canonical script — works when piped to bash (wrapper scripts/install.sh does not). */
+export const AGENTDRIVE_INSTALL_SCRIPT_FALLBACK =
+  'https://raw.githubusercontent.com/PabloTheThinker/AgentDrive/main/install.sh'
+
 export type AgentDriveInstallResult = {
   actions: string[]
   errors: string[]
@@ -33,16 +37,27 @@ export async function installAgentDrive(): Promise<AgentDriveInstallResult> {
   actions.push(`python3 ${python.stdout.trim()}`)
 
   const localBin = join(homedir(), '.local', 'bin')
-  const installCmd = `export PATH="${localBin}:$PATH" RUN_LAUNCH=false; curl -fsSL "${AGENTDRIVE_INSTALL_URL}" | bash`
+  const venvBin = join(homedir(), '.agentdrive', 'venv', 'bin')
+  const pathPrefix = `export PATH="${localBin}:${venvBin}:$PATH" RUN_LAUNCH=false`
 
-  const install = await runCommand('bash', ['-c', installCmd], process.cwd(), 600_000)
+  const tryInstall = async (url: string) =>
+    runCommand('bash', ['-c', `${pathPrefix}; curl -fsSL "${url}" | bash`], process.cwd(), 600_000)
+
+  let install = await tryInstall(AGENTDRIVE_INSTALL_URL)
+  let installSource = AGENTDRIVE_INSTALL_URL
+
+  if (!install.ok) {
+    install = await tryInstall(AGENTDRIVE_INSTALL_SCRIPT_FALLBACK)
+    installSource = AGENTDRIVE_INSTALL_SCRIPT_FALLBACK
+  }
+
   if (!install.ok) {
     const detail = install.stderr || install.stdout || 'unknown error'
     errors.push(`AgentDrive install failed: ${detail}`)
     return { actions, errors }
   }
 
-  actions.push(`installed AgentDrive (${AGENTDRIVE_INSTALL_URL})`)
+  actions.push(`installed AgentDrive (${installSource})`)
 
   const bin = await resolveAgentDriveBin({})
   if (!bin) {
