@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/openmangos-mark.jpg" alt="" width="112" />
+  <img src="assets/openmangos-mark.png" alt="" width="112" />
 </p>
 
 <p align="center">
