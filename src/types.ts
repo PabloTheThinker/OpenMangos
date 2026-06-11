@@ -52,3 +52,59 @@ export interface UserProfile {
   }
   notes?: string
 }
+
+export interface OpenMangosConfig {
+  constraints?: string[]
+  backends?: {
+    preferred?: BackendId
+    routing?: Partial<Record<string, BackendId>>
+  }
+  probes?: {
+    extra_signals?: ProbeSignal[]
+  }
+  verify_on_exit?: boolean
+  plugins?: string[]
+}
+
+export interface ToolDefinition {
+  id: string
+  label: string
+  command: string
+  category: 'dev' | 'test' | 'infra' | 'git' | 'debug' | 'ship'
+  modes: Mode[]
+  reason: string
+}
+
+export interface SessionEntry {
+  id: string
+  startedAt: string
+  endedAt?: string
+  backend: BackendId
+  mode: Mode
+  workspace: string
+  root: string
+  event: 'start' | 'handoff' | 'end'
+  note?: string
+}
+
+export interface RouteResult {
+  backend: BackendId
+  mode: Mode
+  reasons: string[]
+  confidence: 'high' | 'medium' | 'low'
+}
+
+export interface MissionPhase {
+  name: string
+  tasks: string[]
+}
+
+export interface MissionPlan {
+  id: string
+  goal: string
+  createdAt: string
+  mode: Mode
+  stack: string[]
+  phases: MissionPhase[]
+  verification: string[]
+}

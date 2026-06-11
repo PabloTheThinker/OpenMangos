@@ -1,20 +1,5 @@
-import type { Mode, SituationGraph } from '../types.js'
-
-const MODE_AFFORDANCES: Record<Mode, string[]> = {
-  build: ['full write access', 'run dev/test scripts', 'format on change'],
-  debug: ['log tailing', 'repro commands', 'health checks', 'read-mostly on prod configs'],
-  infra: ['plan/diff first', 'deploy commands', 'service health checks', 'confirm destructive ops'],
-  review: ['diff-centric workflow', 'no writes without approval', 'pre-commit focus'],
-  ship: ['changelog + version bump', 'deploy pipeline', 'require verification pass'],
-}
-
-const MODE_GUARDRAILS: Record<Mode, string[]> = {
-  build: ['standard sandbox'],
-  debug: ['avoid prod writes unless explicit'],
-  infra: ['block destructive ops without confirmation'],
-  review: ['writes blocked by default'],
-  ship: ['verification must pass before deploy'],
-}
+import { getModeDefinition } from '../modes/definitions.js'
+import type { SituationGraph } from '../types.js'
 
 export function situationToJson(situation: SituationGraph): string {
   return JSON.stringify(situation, null, 2)
@@ -58,10 +43,13 @@ export function situationToMarkdown(situation: SituationGraph): string {
     ),
     '',
     `## Active mode affordances (${situation.mode})`,
-    ...MODE_AFFORDANCES[situation.mode].map((a) => `- ${a}`),
+    ...getModeDefinition(situation.mode).affordances.map((a) => `- ${a}`),
+    '',
+    '## Mode palette',
+    ...getModeDefinition(situation.mode).palette.map((p) => `- \`${p}\``),
     '',
     '## Guardrails',
-    ...MODE_GUARDRAILS[situation.mode].map((g) => `- ${g}`),
+    ...getModeDefinition(situation.mode).guardrails.map((g) => `- ${g}`),
     '',
     '## Constraints',
     ...(situation.constraints.length ? situation.constraints.map((c) => `- ${c}`) : ['- none']),

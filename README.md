@@ -23,17 +23,20 @@ npm run dev -- sense
 
 | Command | Description |
 |---|---|
+| `om init` | Scaffold `.openmangos/` (profile, config) |
 | `om sense` | Probe workspace and print situation report |
-| `om sense --json` | Machine-readable situation graph |
-| `om sense --save` | Write `.openmangos/profile.yaml` |
-| `om mode` | Show active mode + reasoning |
-| `om mode debug` | Set mode override |
-| `om mode --suggest` | Show suggested mode |
-| `om pack` | Print Markdown context pack |
-| `om pack --write` | Write `.openmangos/context-pack.{md,json}` |
-| `om verify` | Run stack-appropriate verification checks |
-| `om verify --dry-run` | List checks without running |
-| `om wrap grok` | Launch backend with context + AGENTS.md sync |
+| `om suggest` | Show suggested mode + reasoning |
+| `om mode [name]` | Show or set mode |
+| `om tools` | Adaptive tool palette for current mode/stack |
+| `om pack [--write]` | Export context pack |
+| `om verify [--dry-run]` | Stack-appropriate verification |
+| `om route "task"` | Suggest backend + mode for a task |
+| `om run [backend]` | Sense + pack + wrap (one shot) |
+| `om wrap [backend]` | Launch backend with full context |
+| `om handoff --to claude` | Switch backend, keep session log |
+| `om session ls` | List recent sessions |
+| `om mission plan "goal"` | Generate phased mission plan |
+| `om doctor` | Check om + backends on PATH |
 
 ## Probes
 

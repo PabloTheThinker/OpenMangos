@@ -1,4 +1,5 @@
 import type { ProbeResult } from '../types.js'
+import { probeCi } from './ci.js'
 import { probeDocker } from './docker.js'
 import { probeFly } from './fly.js'
 import { probeGit } from './git.js'
@@ -20,6 +21,7 @@ const PROBES = [
   probeK8s,
   probeVercel,
   probeFly,
+  probeCi,
   probePorts,
 ]
 

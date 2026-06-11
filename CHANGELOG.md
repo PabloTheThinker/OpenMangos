@@ -4,6 +4,36 @@ Notable changes to this project. Newest entries first.
 
 ---
 
+## 2026-06-11 — v0.3.0 complete tool push
+
+### Added
+
+- `TASKLIST.md` — research-backed master roadmap
+- `om init`, `om tools`, `om suggest`, `om doctor`
+- `om route`, `om run`, `om handoff --to <backend>`
+- `om session ls/show` — JSONL session log
+- `om mission plan/show` — Factory-inspired mission-lite plans
+- `src/modes/definitions.ts` — affordances, guardrails, palette per mode
+- `src/core/config.ts` — `.openmangos/config.yaml` with backend routing
+- `src/core/tools.ts` — dynamic tool registry
+- `src/core/router.ts` — task → backend/mode heuristics
+- CI probe (GitHub Actions, GitLab, CircleCI, Jenkins)
+- CLI modularized into `src/commands/register.ts`
+
+### Changed
+
+- `om wrap` records sessions; injects `OPENMANGOS_SESSION`, `OPENMANGOS_BACKEND`
+- Context pack includes mode palette
+- Version 0.3.0
+
+### Verify
+
+```bash
+om doctor && om tools && om route "fix auth test" && om mission plan "ship v0.3"
+```
+
+---
+
 ## 2026-06-11 — Phase 1 (agent swarm)
 
 ### Added

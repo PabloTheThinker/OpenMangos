@@ -5,9 +5,14 @@ import { syncAgentsMd } from '../core/agents-md.js'
 import { getBackendSpec } from '../core/backends.js'
 import { situationToJson, situationToMarkdown } from '../core/pack.js'
 import { PROFILE_DIR, saveSituationProfile } from '../core/profile.js'
+import { startSession } from '../core/session.js'
 import type { BackendId, SituationGraph } from '../types.js'
 
-export async function prepareWrapContext(root: string, situation: SituationGraph): Promise<{
+export async function prepareWrapContext(
+  root: string,
+  situation: SituationGraph,
+  backend: BackendId,
+): Promise<{
   packPath: string
   profilePath: string
   env: NodeJS.ProcessEnv
@@ -25,6 +30,9 @@ export async function prepareWrapContext(root: string, situation: SituationGraph
 
   const profilePath = await saveSituationProfile(root, situation)
 
+  const session = await startSession(root, backend, situation.mode, situation.workspace, 'wrap')
+  console.error(`OpenMangos → session: ${session.id}`)
+
   const env: NodeJS.ProcessEnv = {
     ...process.env,
     OPENMANGOS_ROOT: root,
@@ -33,6 +41,8 @@ export async function prepareWrapContext(root: string, situation: SituationGraph
     OPENMANGOS_CONTEXT_MD: packMdPath,
     OPENMANGOS_PROFILE: profilePath,
     OPENMANGOS_WORKSPACE: situation.workspace,
+    OPENMANGOS_SESSION: session.id,
+    OPENMANGOS_BACKEND: backend,
   }
 
   return { packPath: packMdPath, profilePath, env }

@@ -2,6 +2,7 @@ import { basename, resolve } from 'node:path'
 import { runAllProbes } from '../probes/registry.js'
 import type { BackendId, HealthEntry, ProbeSignal, SituationGraph } from '../types.js'
 import { detectAvailableBackends } from './backends.js'
+import { loadConfig } from './config.js'
 import { loadProfile } from './profile.js'
 import { resolveMode } from './modes.js'
 
@@ -43,21 +44,26 @@ function buildRuntime(signals: ProbeSignal[]): Record<string, string> {
 
 export async function buildSituation(rootInput?: string): Promise<SituationGraph> {
   const root = resolve(rootInput ?? process.cwd())
-  const [probeResults, profile, availableBackends] = await Promise.all([
+  const [probeResults, profile, config, availableBackends] = await Promise.all([
     runAllProbes(root),
     loadProfile(root),
+    loadConfig(root),
     detectAvailableBackends(),
   ])
 
-  const signals = probeResults.flatMap((r) => r.signals)
+  const signals = [
+    ...probeResults.flatMap((r) => r.signals),
+    ...(config.probes?.extra_signals ?? []),
+  ]
   const { mode, suggestedMode, suggestedReasons, activeReasons } = resolveMode(
     probeResults,
     profile.mode,
   )
 
+  const preferredCandidate =
+    profile.backends?.preferred ?? config.backends?.preferred ?? 'grok'
   const preferred: BackendId =
-    profile.backends?.preferred && availableBackends.includes(profile.backends.preferred) ?
-      profile.backends.preferred
+    availableBackends.includes(preferredCandidate) ? preferredCandidate
     : availableBackends[0] ?? 'grok'
 
   const workflow = buildWorkflow(signals)
@@ -88,7 +94,7 @@ export async function buildSituation(rootInput?: string): Promise<SituationGraph
     modeReasons: activeReasons,
     suggestedMode,
     suggestedModeReasons: suggestedReasons,
-    constraints: profile.constraints ?? [],
+    constraints: [...new Set([...(profile.constraints ?? []), ...(config.constraints ?? [])])],
     backends: {
       preferred,
       available: availableBackends,
