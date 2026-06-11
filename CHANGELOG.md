@@ -4,20 +4,24 @@ Notable changes to this project. Newest entries first.
 
 ---
 
-## 2026-06-11 — OpenMangos logo + README hero
+## 2026-06-11 — OpenMangos mascot logo (single README hero)
 
 ### Added
 
-- **`assets/openmangos-mark.jpg`** — app icon mark (mango + terminal chevron), distinct from Vektra site hero
-- **`assets/openmangos-logo.svg`** / **`openmangos-logo-dark.svg`** — horizontal wordmark for light/dark GitHub themes
+- **`assets/openmangos-mascot.png`** — mango character mascot (terminal badge, waving pose)
+- **`assets/openmangos-logo-text.svg`** / **`openmangos-logo-text-dark.svg`** — single mascot + wordmark logo (OpenClaw-style)
 
 ### Changed
 
-- **README.md** — hero logo block with theme-aware wordmark
+- **README.md** — one centered logo via `<picture>` (light/dark), removed duplicate mark + wordmark stack
+
+### Removed
+
+- Separate app-icon mark and split logo SVGs
 
 ### Verify
 
-- `https://github.com/PabloTheThinker/OpenMangos` — logo renders in README header
+- `https://github.com/PabloTheThinker/OpenMangos` — one hero logo in README header
 
 ---
 
