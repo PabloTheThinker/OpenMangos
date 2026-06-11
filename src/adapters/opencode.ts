@@ -11,9 +11,9 @@ export function modeToOpenCodeAgent(mode: Mode): OpenCodeAgent {
   return 'build'
 }
 
-export function openCodeLaunchArgs(situation: SituationGraph, packMdRelative: string): string[] {
-  const agent = modeToOpenCodeAgent(situation.mode)
-  return ['--agent', agent, '-f', packMdRelative]
+/** TUI launch — context via opencode.json instructions + OPENMANGOS_* env (no -f; that's run-only). */
+export function openCodeLaunchArgs(_situation: SituationGraph, _packMdRelative: string): string[] {
+  return []
 }
 
 export async function syncOpenCodeConfig(
@@ -38,17 +38,11 @@ export async function syncOpenCodeConfig(
     'AGENTS.md',
   ])
 
-  const merged = {
-    ...existing,
-    $schema: existing.$schema ?? 'https://opencode.ai/config.json',
-    instructions,
-    default_agent: agent,
-    _openmangos: {
-      mode: situation.mode,
-      syncedAt: new Date().toISOString(),
-      contextPack: packMdPath,
-    },
-  }
+  const merged: Record<string, unknown> = { ...existing }
+  delete merged._openmangos
+  merged.$schema = existing.$schema ?? 'https://opencode.ai/config.json'
+  merged.instructions = instructions
+  merged.default_agent = agent
 
   await writeFile(configPath, JSON.stringify(merged, null, 2) + '\n', 'utf8')
   return { configPath, agent }

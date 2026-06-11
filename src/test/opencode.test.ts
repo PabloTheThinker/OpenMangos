@@ -39,9 +39,9 @@ describe('OpenCode adapter', () => {
     assert.equal(modeToOpenCodeAgent('infra'), 'build')
   })
 
-  it('builds launch args with agent and context file', () => {
+  it('TUI launch uses opencode.json only (no run-only -f flag)', () => {
     const args = openCodeLaunchArgs(fakeSituation('debug'), '.openmangos/context-pack.md')
-    assert.deepEqual(args, ['--agent', 'plan', '-f', '.openmangos/context-pack.md'])
+    assert.deepEqual(args, [])
   })
 
   it('syncs opencode.json with instructions and default_agent', async () => {

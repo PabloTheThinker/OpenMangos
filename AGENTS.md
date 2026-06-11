@@ -3,15 +3,16 @@
 <!-- OPENMANGOS:START -->
 ## OpenMangos situation
 
-*Managed by `om wrap`. Updated: 2026-06-11T08:51:22.839Z*
+*Managed by `om wrap`. Updated: 2026-06-11T09:18:42.282Z*
 
 - **Mode:** review
-- **Suggested mode:** review
+- **Suggested mode:** debug
 - **Stack:** node, typescript
 - **Infra:** none detected
 
 ### Verification commands
 
+- `npm test`
 - `npm run build`
 - `npm run typecheck`
 

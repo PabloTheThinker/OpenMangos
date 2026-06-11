@@ -7,7 +7,7 @@ const program = new Command()
 program
   .name('om')
   .description('OpenMangos — adaptive terminal framework')
-  .version('0.6.1')
+  .version('0.6.2')
 
 registerCommands(program)
 

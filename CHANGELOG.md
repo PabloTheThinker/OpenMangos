@@ -4,6 +4,22 @@ Notable changes to this project. Newest entries first.
 
 ---
 
+## 2026-06-11 — v0.6.2 fix OpenCode TUI launch
+
+### Fixed
+
+- OpenCode showed **help text and exited** — `-f` is `opencode run` only, not TUI
+- Invalid `_openmangos` key in `opencode.json` broke OpenCode config validation
+- TUI launch now uses `opencode` + `instructions` / `default_agent` in synced config
+
+### Verify
+
+```bash
+om opencode   # should open OpenCode TUI, not help
+```
+
+---
+
 ## 2026-06-11 — v0.6.1 backend picker + `om opencode` shorthand
 
 ### Added
