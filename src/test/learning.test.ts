@@ -1,8 +1,10 @@
 import { describe, it, before, after } from 'node:test'
 import assert from 'node:assert/strict'
+import { homedir } from 'node:os'
 import { mkdtemp, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
+import { buildSituation } from '../core/situation.js'
 import { developSkillsFromSession, proposeDerivedSkills } from '../learning/develop.js'
 import { runLearningLoopOnExit } from '../learning/loop.js'
 import { getSkill, listSkills, skillSlugForSituation, upsertSkill } from '../learning/skills.js'
@@ -29,6 +31,14 @@ function fakeSituation(root: string): SituationGraph {
     backends: { preferred: 'opencode', available: ['opencode'] },
   }
 }
+
+describe('personal home bootstrap', () => {
+  it('tags home directory with personal stack when no probes match', async () => {
+    const situation = await buildSituation(homedir())
+    assert.ok(situation.stack.includes('personal'))
+    assert.equal(situation.workflow.workspace_kind, 'personal')
+  })
+})
 
 describe('Mangos learning loop', () => {
   let root = ''
@@ -60,6 +70,28 @@ describe('Mangos learning loop', () => {
     const recalled = await recallSkillsForSituation(root, situation, 'opencode')
     assert.ok(recalled.length >= 1)
     assert.equal(recalled[0].slug, slug)
+  })
+
+  it('derives personal-shell child from home bootstrap', async () => {
+    const situation = {
+      ...fakeSituation(root),
+      stack: ['personal'],
+      workflow: { workspace_kind: 'personal' },
+    }
+    const parentSlug = skillSlugForSituation(situation, 'opencode')
+    await upsertSkill(root, situation, 'opencode', {
+      learnedFrom: 'parent',
+      verificationCommands: [],
+      incrementSuccess: true,
+    })
+    const derived = await developSkillsFromSession(root, {
+      situation,
+      backend: 'opencode',
+      parentSlug,
+      outcome: 'success',
+      verificationCommands: [],
+    })
+    assert.ok(derived.some((s) => s.endsWith('-personal-shell')))
   })
 
   it('derives infra child skills from parent learning', async () => {

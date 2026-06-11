@@ -172,5 +172,14 @@ function printBootstrapBanner(situation: SituationGraph, backend: BackendId, hos
       `  backend ${backend} · installed ${situation.backends.available.join(', ') || 'none'} · host ${host}`,
     ),
   )
+  if (situation.workflow.workspace_kind === 'bare') {
+    console.error(
+      pc.dim('  tip: cd into a repo (or om -C <path>) for stack-aware skills and verification'),
+    )
+  } else if (situation.workflow.workspace_kind === 'personal') {
+    console.error(
+      pc.dim('  tip: personal shell — Mangos Drive personal swarm active; cd to a repo for project skills'),
+    )
+  }
   console.error('')
 }

@@ -75,6 +75,32 @@ export function proposeDerivedSkills(input: {
   const parent = input.parentSkill
   const parentTags = new Set(parent?.meta.openmangos.tags ?? [])
   const successCount = parent?.meta.openmangos.success_count ?? 0
+  const isPersonal =
+    input.situation.stack.includes('personal') ||
+    input.situation.workflow.workspace_kind === 'personal'
+
+  if (isPersonal) {
+    proposals.push({
+      slug: `${input.parentSlug}-personal-shell`,
+      kind: 'specialized',
+      parentSlug: input.parentSlug,
+      situation: input.situation,
+      backend: input.backend,
+      description: `Personal home-shell operator workflow derived from ${input.parentSlug}`,
+      learnedFrom: `derived from personal bootstrap · parent ${input.parentSlug}`,
+      bodySuffix: [
+        '',
+        '## Personal Shell',
+        '',
+        'Bootstrapped from home (`~`) — no project stack detected.',
+        '',
+        '1. Mangos Drive personal swarm carries cross-repo memory',
+        '2. `cd` into a repo before heavy build work for project-specific skills',
+        '3. `om -C <path>` to bootstrap directly in a project',
+        '4. `om learn nudge --note "..."` after multi-step personal workflows',
+      ].join('\n'),
+    })
+  }
 
   for (const infra of input.situation.infra) {
     const token = infraToken(infra)

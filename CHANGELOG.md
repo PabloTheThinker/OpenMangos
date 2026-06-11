@@ -4,6 +4,19 @@ Notable changes to this project. Newest entries first.
 
 ---
 
+## 2026-06-11 — Personal home bootstrap + personal-shell skill
+
+### Added
+
+- **Home `~` bootstrap** — empty stack tagged `personal`; derives `*-personal-shell` child skill
+- Bootstrap tips when workspace is personal or bare (no repo detected)
+
+### Changed
+
+- **v0.11.2** — skill slugs from home become `build-personal-opencode` (not generic `build-opencode`)
+
+---
+
 ## 2026-06-11 — Skill derivation (learning develops new skills)
 
 ### Added

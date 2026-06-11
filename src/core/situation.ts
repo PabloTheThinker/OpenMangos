@@ -1,3 +1,4 @@
+import { homedir } from 'node:os'
 import { basename, resolve } from 'node:path'
 import { runAllProbes } from '../probes/registry.js'
 import type { BackendId, HealthEntry, ProbeSignal, SituationGraph } from '../types.js'
@@ -69,17 +70,28 @@ export async function buildSituation(rootInput?: string): Promise<SituationGraph
   const workflow = buildWorkflow(signals)
   if (profile.intent) workflow.intent = profile.intent
 
+  let stack = unique([
+    ...collectLabels(signals, 'stack', 'runtime'),
+    ...collectLabels(signals, 'stack', 'language'),
+    ...collectLabels(signals, 'stack', 'framework'),
+    ...collectLabels(signals, 'stack', 'layout'),
+    ...collectLabels(signals, 'stack', 'test_runner'),
+  ])
+
+  const atHome = resolve(root) === resolve(homedir())
+  if (!stack.length) {
+    stack = [atHome ? 'personal' : 'bare']
+    workflow.workspace_kind = atHome ? 'personal' : 'bare'
+  } else if (atHome) {
+    stack = unique([...stack, 'personal'])
+    workflow.workspace_kind = 'personal'
+  }
+
   return {
     workspace: basename(root),
     root,
     generatedAt: new Date().toISOString(),
-    stack: unique([
-      ...collectLabels(signals, 'stack', 'runtime'),
-      ...collectLabels(signals, 'stack', 'language'),
-      ...collectLabels(signals, 'stack', 'framework'),
-      ...collectLabels(signals, 'stack', 'layout'),
-      ...collectLabels(signals, 'stack', 'test_runner'),
-    ]),
+    stack,
     infra: unique([
       ...collectLabels(signals, 'infra', 'compose'),
       ...collectLabels(signals, 'infra', 'dockerfile'),

@@ -244,7 +244,12 @@ export async function upsertSkill(
   } else {
     meta = {
       name: slug,
-      description: `Operator skill for ${situation.mode} on ${situation.stack.join('+') || 'unknown'} via ${backend}`,
+      description:
+        situation.workflow.workspace_kind === 'personal' ?
+          `Personal-shell ${situation.mode} via ${backend} (home bootstrap)`
+        : situation.workflow.workspace_kind === 'bare' ?
+          `Bare workspace ${situation.mode} via ${backend} — cd into a repo for richer skills`
+        : `Operator skill for ${situation.mode} on ${situation.stack.join('+')} via ${backend}`,
       version: '1.0.0',
       openmangos: {
         tags,
