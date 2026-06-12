@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 #
-# OpenMangos Installer
+# OpenMango Installer
 #
 # One-liner (recommended):
-#   curl -fsSL https://vektraindustries.com/openmangos/install | bash
+#   curl -fsSL https://vektraindustries.com/openmango/install | bash
 #
 # With options:
-#   curl -fsSL https://vektraindustries.com/openmangos/install | bash -s -- --no-onboard
+#   curl -fsSL https://vektraindustries.com/openmango/install | bash -s -- --no-onboard
 #   OM_BRANCH=main curl -fsSL ... | bash
 #
 set -euo pipefail
@@ -53,7 +53,7 @@ done
 
 print_banner() {
   echo ""
-  echo -e "${BOLD}${YELLOW}🥭 OpenMangos Installer${NC}"
+  echo -e "${BOLD}${YELLOW}🥭 OpenMango Installer${NC}"
   echo "The terminal adapts to the problem. The model adapts to the terminal."
   echo ""
 }
@@ -66,7 +66,7 @@ ensure_node() {
   local major
   major="$(node -p "process.versions.node.split('.')[0]")"
   if [[ "${major}" -lt 20 ]]; then
-    error "Node ${major} detected — OpenMangos requires Node 20+"
+    error "Node ${major} detected — OpenMango requires Node 20+"
     exit 1
   fi
   success "Node $(node --version)"
@@ -74,7 +74,7 @@ ensure_node() {
 
 ensure_git() {
   if ! command -v git >/dev/null 2>&1; then
-    error "git is required to install OpenMangos"
+    error "git is required to install OpenMango"
     exit 1
   fi
 }
@@ -91,12 +91,12 @@ ensure_npm_path() {
 checkout_source() {
   mkdir -p "$OM_HOME"
   if [[ -d "${SRC_DIR}/.git" ]]; then
-    log "Updating OpenMangos source at ${SRC_DIR}"
+    log "Updating OpenMango source at ${SRC_DIR}"
     git -C "$SRC_DIR" fetch origin "$BRANCH" --depth 1 2>/dev/null || git -C "$SRC_DIR" fetch origin
     git -C "$SRC_DIR" checkout "$BRANCH" 2>/dev/null || true
     git -C "$SRC_DIR" pull --ff-only origin "$BRANCH" 2>/dev/null || git -C "$SRC_DIR" pull --ff-only || true
   else
-    log "Cloning OpenMangos (${BRANCH})"
+    log "Cloning OpenMango (${BRANCH})"
     rm -rf "$SRC_DIR"
     git clone --depth 1 --branch "$BRANCH" "$REPO" "$SRC_DIR"
   fi
@@ -156,14 +156,14 @@ run_onboard() {
 
 print_done() {
   echo ""
-  success "OpenMangos ready"
+  success "OpenMango ready"
   echo "  om              adaptive bootstrap → agent"
   echo "  om onboard      rerun setup wizard"
   echo "  om update       rebuild from source"
   echo "  om sense        probe workspace"
   echo ""
   echo "Install source: ${SRC_DIR}"
-  echo "One-liner: curl -fsSL https://vektraindustries.com/openmangos/install | bash"
+  echo "One-liner: curl -fsSL https://vektraindustries.com/openmango/install | bash"
   echo ""
 }
 

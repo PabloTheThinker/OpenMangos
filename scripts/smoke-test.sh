@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Full OpenMangos smoke test — unit tests, install, onboard, AgentDrive, core commands.
+# Full OpenMango smoke test — unit tests, install, onboard, AgentDrive, core commands.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -48,7 +48,7 @@ export PATH="$(npm prefix -g)/bin:${HOME}/.local/bin:${PATH}"
 run "om on PATH" command -v om
 
 step "3/10 — curl install URLs"
-run "openmangos install URL 200" http_ok "https://vektraindustries.com/openmangos/install"
+run "openmangos install URL 200" http_ok "https://vektraindustries.com/openmango/install"
 run "agentdrive install URL 200" http_ok "https://vektraindustries.com/agentdrive/install"
 run "agentdrive install is canonical script" bash -c 'curl -fsSL "https://raw.githubusercontent.com/PabloTheThinker/AgentDrive/main/install.sh" | head -1 | grep -q "#!/usr/bin/env bash"'
 

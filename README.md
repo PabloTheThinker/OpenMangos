@@ -1,7 +1,7 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: light)" srcset="assets/openmangos-logo-text-dark.svg" />
-    <img src="assets/openmangos-logo-text.svg" alt="OpenMangos" width="560" />
+    <img src="assets/openmangos-logo-text.svg" alt="OpenMango" width="560" />
   </picture>
 </p>
 
@@ -10,9 +10,9 @@
 </p>
 
 <p align="center">
-  <a href="https://vektraindustries.com/openmangos">Website</a>
+  <a href="https://vektraindustries.com/openmango">Website</a>
   ·
-  <a href="https://vektraindustries.com/openmangos/install">Install</a>
+  <a href="https://vektraindustries.com/openmango/install">Install</a>
   ·
   <a href="./CONCEPT.md">Concept</a>
   ·
@@ -23,7 +23,7 @@
 
 ---
 
-You already have the agents. **OpenMangos** — *OpenMango* if you're on X — makes the terminal worthy of them.
+You already have the agents. **OpenMango** makes the terminal worthy of them.
 
 Run `om`. It reads your codebase — the stack, the infra, what is actually running — and shapes itself around the work in front of you. The right mode. The right context. The right backend. One command. No new editor. No model lock-in.
 
@@ -38,7 +38,7 @@ Built by [Vektra Industries](https://vektraindustries.com).
 One line. Node 20+ and git.
 
 ```bash
-curl -fsSL https://vektraindustries.com/openmangos/install | bash
+curl -fsSL https://vektraindustries.com/openmango/install | bash
 ```
 
 Clones to `~/.openmangos/src`. Builds `om`. Links globally. Walks you through onboarding.
@@ -53,7 +53,7 @@ om update       # pull latest
 
 ## Sense. Adapt. Launch.
 
-Most AI terminals treat every project the same. OpenMangos does not.
+Most AI terminals treat every project the same. OpenMango does not.
 
 **Sense** probes what matters — git, languages, frameworks, containers, cloud hooks, live processes. It builds a situation graph: mode, stack, infra, health.
 
@@ -71,7 +71,7 @@ The terminal stops being a pipe. It becomes the operator.
 
 Memory should feel personal — not scattered across swarm IDs you never asked for.
 
-OpenMangos provisions **your** drive on [AgentDrive](https://vektraindustries.com/agentdrive): a named namespace with a workspace swarm for the project and a personal swarm that follows you across repos.
+OpenMango provisions **your** drive on [AgentDrive](https://vektraindustries.com/agentdrive): a named namespace with a workspace swarm for the project and a personal swarm that follows you across repos.
 
 Recall on boot. Remember on exit. Structured memory that grows with your work — without asking you to manage the substrate.
 
@@ -81,7 +81,7 @@ om recall
 om remember
 ```
 
-AgentDrive is the memory layer. OpenMangos is how you operate it.
+AgentDrive is the memory layer. OpenMango is how you operate it.
 
 ## Built for real work
 
@@ -96,7 +96,7 @@ AgentDrive is the memory layer. OpenMangos is how you operate it.
 | | |
 |---|---|
 | `om` | Bootstrap — sense, heal, pack, launch |
-| `om sense` | What OpenMangos knows about this workspace |
+| `om sense` | What OpenMango knows about this workspace |
 | `om pack --write` | Export the context pack agents read |
 | `om doctor` | Health — backends, OpenCode, Mangos Drive |
 | `om tui` | Orchestrator shell preview |
@@ -140,11 +140,11 @@ npm run dev -- sense
 
 ## How it fits together
 
-OpenMangos is the orchestration layer. Your agents are the runtime.
+OpenMango is the orchestration layer. Your agents are the runtime.
 
 | | |
 |---|---|
-| **OpenMangos (`om`)** | Sense, mode, context, memory, launch |
+| **OpenMango (`om`)** | Sense, mode, context, memory, launch |
 | **Your agent** | OpenCode, Grok, Claude, Codex, Cursor |
 | **AgentDrive** | Memory substrate under Mangos Drive |
 | **Warp** *(optional)* | Terminal host |

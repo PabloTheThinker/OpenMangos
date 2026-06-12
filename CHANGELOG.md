@@ -4,6 +4,127 @@ Notable changes to this project. Newest entries first.
 
 ---
 
+## 2026-06-12 — Canonical Vektra URL `/openmango`
+
+### Changed
+
+- Install and website links → `https://vektraindustries.com/openmango` (README, `install.sh`, smoke test)
+- npm slug and `~/.openmangos/` paths unchanged
+
+---
+
+## 2026-06-11 — Mascot v2
+
+### Changed
+
+- **`assets/openmangos-mascot.png`** — regenerated from `~/Pictures/Open Mangos Mascotv2.png` (transparent cutout, **Open Mango** name badge)
+- **`assets/openmangos-mascot-logo.png`** · **`openmangos-logo-text*.svg`** — README wordmark embed refreshed
+- Vektra: **`public/openmangos-portrait.png`** · **`openmangos-mark.png`** · **`openmangos-hero.jpg`**
+
+---
+
+## 2026-06-11 — OpenMango canonical branding
+
+### Added
+
+- **`src/core/brand.ts`** — `PRODUCT_NAME = 'OpenMango'`; technical slug unchanged (`openmangos`, `.openmangos/`, `OPENMANGOS_*`)
+
+### Changed
+
+- **v0.12.0** — user-facing copy, CLI descriptions, context packs, AGENTS.md prose, TUI, and install messaging use **OpenMango**
+- Technical identifiers unchanged: npm `openmangos`, repo `OpenMangos`, `OpenMangosConfig`, `<!-- OPENMANGOS:START -->`
+
+### Verify
+
+```bash
+cd "Vektra Industries/Software/OpenMangos" && npm test && npm run build
+```
+
+---
+
+## 2026-06-11 — Reset clears learning loop
+
+### Fixed
+
+- **`om reset`** explicitly clears `.openmangos/learning/` (skills, session digests, events, recall cache) and session logs
+- **`om reset --keep-global`** from `~` now preserves `install.yaml` while still wiping learning/memory (was deleting everything)
+
+### Changed
+
+- **v0.11.7** — reset confirmation lists learning/skills paths
+
+---
+
+## 2026-06-11 — Skill readability & formatting
+
+### Added
+
+- **`src/learning/skill-format.ts`** — structured SKILL.md bodies (summary, at-a-glance table, when to use, what we did, lineage)
+- **`om skills format`** — reformat existing skills for readability
+- Grouped **`om skills list`** output by category with one-line summaries
+
+### Changed
+
+- **v0.11.6** — recall uses compact excerpts + markdown table; junk tags filtered; false pitfalls (exit null) removed
+
+---
+
+## 2026-06-11 — Session-intent skill naming
+
+### Added
+
+- **`src/learning/skill-naming.ts`** — skills named from OpenCode session title / primary user goal (e.g. `build-three-js-mango-creation-opencode`)
+- **`om skills delete <slug>`** — prune stale or poorly named skills
+
+### Changed
+
+- **v0.11.5** — primary learned skill uses human description (`Three.js mango creation via opencode`); slug derived from intent, not `*-session-mango` topic forks
+- Recall / AGENTS.md nudge shows descriptions first; junk follow-up goals (`close it`) filtered from naming
+- Removed noisy per-word topic child skills; procedure lives in the session-named operator skill
+
+---
+
+## 2026-06-11 — OpenCode 1.17+ transcript capture (SQLite/CLI)
+
+### Fixed
+
+- **Session capture missed live sessions** — OpenCode ≥1.17 stores sessions in SQLite (`opencode.db`), not legacy JSON files under `storage/session/global/`
+- Capture now uses `opencode session list` + `opencode export` (with JSON-file fallback for older installs)
+
+### Added
+
+- **`om learn capture`** — backfill transcript digest and derive session skills for a past `om wrap` session
+
+### Changed
+
+- **v0.11.4** — learning exit message includes transcript summary when captured
+
+---
+
+## 2026-06-11 — Session transcript capture for skill development
+
+### Added
+
+- **`src/learning/session-capture.ts`** — on wrap exit, reads OpenCode session storage (`~/.local/share/opencode/storage`) and builds a `SessionDigest` (user goals, commands, tools, files, topics, failures)
+- **Persisted digests** — `.openmangos/learning/sessions/<om-session-id>.json`
+- **Transcript-driven skills** — parent skills get `## Session Procedure`; child skills: `*-session-procedure`, `*-session-<topic>`, `*-session-pitfalls`
+- **`getSessionWindow()`** — joins start/end entries for accurate OpenCode time matching
+
+### Changed
+
+- **v0.11.3** — learning loop uses session transcript (not only exit code / situation graph) for `learnedFrom`, procedure sections, and derived children
+
+### Verify
+
+```bash
+cd "Vektra Industries/Software/OpenMangos" && npm test
+om wrap opencode   # complete a session, then:
+ls ~/.openmangos/learning/sessions/
+om skills list
+```
+
+---
+
 ## 2026-06-11 — Personal home bootstrap + personal-shell skill
 
 ### Added

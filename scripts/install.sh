@@ -2,7 +2,7 @@
 # Compatibility wrapper — delegates to canonical root install.sh
 #
 # Prefer:
-#   curl -fsSL https://vektraindustries.com/openmangos/install | bash
+#   curl -fsSL https://vektraindustries.com/openmango/install | bash
 
 set -euo pipefail
 
@@ -16,7 +16,7 @@ fi
 
 if [[ -t 1 && -z "${NO_COLOR:-}" ]]; then
   echo -e "\033[0;33m⚠\033[0m scripts/install.sh is a compatibility wrapper."
-  echo "  Canonical: curl -fsSL https://vektraindustries.com/openmangos/install | bash"
+  echo "  Canonical: curl -fsSL https://vektraindustries.com/openmango/install | bash"
   echo ""
 fi
 
